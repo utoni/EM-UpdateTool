@@ -1,0 +1,41 @@
+CFLAGS = -std=c++11 -I. -ffunction-sections -fdata-sections -Wl,--gc-sections -Os -DCSV_IO_NO_THREAD=1
+LDFLAGS =
+ifneq ($(BUILD_LINUX),)
+WXDIR = wxWidgets-host
+CC = g++
+CFLAGS += -g
+else
+WXDIR = wxWidgets-i686-w64-mingw32
+CC = i686-w64-mingw32-g++
+CFLAGS += -static-libstdc++ -static-libgcc -D_UNICODE=1 -municode -mthreads -mwindows
+LDFLAGS += -static -lws2_32 -dynamic
+SUFFIX = .exe
+OBJSUFFIX = _win
+endif
+
+BIN = utool$(SUFFIX)
+SRC_FILES = Json.cpp UpdateFactory.cpp UpdateTool.cpp
+ifneq ($(BUILD_GUI),)
+SRC_FILES += UpdateGUI.cpp JobQueue.cpp
+CFLAGS += -DUSE_GUI=1 -Wno-deprecated-declarations $(shell $(WXDIR)/wx-config --cflags)
+LDFLAGS += $(shell $(WXDIR)/wx-config --libs std)
+endif
+
+SRC = $(patsubst %.cpp,src/%.cpp,$(SRC_FILES))
+OBJ = $(SRC:.cpp=$(OBJSUFFIX).o)
+
+
+%$(OBJSUFFIX).o: %.cpp
+	@echo 'Building $@ from $<'
+	$(CC) -Wall -c -o $@ $< $(CFLAGS)
+
+$(BIN): $(OBJ)
+	@echo 'Linking $^ to $@'
+	$(CC) -Wall -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
+all: $(BIN)
+
+clean:
+	$(RM) $(BIN) $(OBJ)
+
+.PHONY: all clean

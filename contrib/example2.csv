@@ -1,0 +1,6 @@
+hostname,port,password,unused_column1,unused_column2,unused_columnN
+127.0.0.1,80,1234,unused1,unused2,unusedN
+127.0.0.1,80,,unused1,unused2,unusedN
+0.0.0.0,80,1234,unused1,unused2,unusedN
+nonexistant.tld,80,,unused1,unused2,unusedN
+localhost,80,1234,unused,unused,unused
