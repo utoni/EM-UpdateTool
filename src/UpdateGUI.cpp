@@ -75,10 +75,11 @@ UpdateGUIFrame::UpdateGUIFrame(const wxString& title, const wxPoint& pos, const 
 	subBox->Add(csvButton, 0, wxALL, 5);
 	subBox->Add(subButton, 0, wxALL, 5);
 	subBox->AddStretchSpacer();
-	ipEntry   = new wxTextCtrl(this, wxID_IP);
+	ipEntry   = new wxTextCtrl(this, wxID_IP, wxEmptyString, wxDefaultPosition,
+	    wxDefaultSize, wxTE_PROCESS_TAB);
 	ipBox->Add(ipEntry, 1, wxEXPAND|wxALL, 5);
 	pwEntry   = new wxTextCtrl(this, wxID_PW, wxEmptyString, wxDefaultPosition,
-	    wxDefaultSize, wxTE_PASSWORD);
+	    wxDefaultSize, wxTE_PASSWORD | wxTE_PROCESS_TAB);
 	pwBox->Add(pwEntry, 1, wxEXPAND|wxALL, 5);
 	imgEntry  = new wxTextCtrl(this, wxID_IMG, wxEmptyString, wxDefaultPosition,
 	    wxDefaultSize, wxTE_READONLY
@@ -97,6 +98,8 @@ UpdateGUIFrame::UpdateGUIFrame(const wxString& title, const wxPoint& pos, const 
 	mainVSizer->Add(logBox, 1, wxEXPAND|wxALL|wxBOTTOM, 5);
 
 	SetSizerAndFit(mainVSizer);
+	SetInitialSize(wxSize(600, 800));
+	Centre();
 	jobs = new Queue(this);
 	{
 		for (int tid = 1; tid <= 2; ++tid) {
