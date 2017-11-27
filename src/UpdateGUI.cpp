@@ -228,6 +228,7 @@ void UpdateGUIFrame::OnImportCSV(wxCommandEvent& event)
 	for (auto *u : uf) {
 		int jobid = rand();
 		jobs->AddJob(Job(Job::eID_THREAD_JOB, JobArgs(jobid, *u)));
+		delete u;
 	}
 	SetStatusText(wxString::Format(wxT("CSV Import %s"), openFileDialog.GetPath()));
 	openFileDialog.Destroy();
@@ -236,16 +237,20 @@ void UpdateGUIFrame::OnImportCSV(wxCommandEvent& event)
 void UpdateGUIFrame::OnUpdate(wxCommandEvent& event)
 {
 	int jobid = rand();
-	std::ostringstream log;
+	std::vector<UpdateFactory*> uf;
 	std::string str;
 
-	log << "Update started ... (Job: #" << jobid << ")";
-	tLog(RTL_DEFAULT, log.str().c_str());
-	jobs->AddJob(Job(Job::eID_THREAD_JOB,
-	    JobArgs(jobid, ipEntry->GetValue(), 80,
-	            imgEntry->GetValue(), pwEntry->GetValue())
-	));
-	SetStatusText(wxString::Format(wxT("Job #%i started."), jobid));
+	str = ipEntry->GetValue();
+	loadUpdateFactoriesFromStr(str, imgEntry->GetValue(), pwEntry->GetValue(), uf);
+	for (auto *u : uf) {
+		std::ostringstream log;
+		log << "Update started ... (Job: #" << jobid << ")";
+		tLog(RTL_DEFAULT, log.str().c_str());
+
+		jobs->AddJob(Job(Job::eID_THREAD_JOB, JobArgs(jobid, *u)));
+		delete u;
+	}
+	SetStatusText(wxT("Jobs started."));
 }
 
 void UpdateGUIFrame::OnThread(wxCommandEvent& event)

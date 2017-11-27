@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 {
 	int rv;
 	std::vector<UpdateFactory*> uf;
-	std::string errstr;
+	std::string errstr, hostPorts;
 
 	if (argc == 0)
 		return 1;
@@ -43,13 +43,10 @@ int main(int argc, char *argv[])
 		}
 	} else
 	if (argc == 4) {
-		uf.push_back(new UpdateFactory());
-		uf[0]->setDest(argv[1], 80);
-		uf[0]->setPass(argv[2]);
-		uf[0]->setUpdateFile(argv[3]);
+		hostPorts = std::string(argv[1]);
+		loadUpdateFactoriesFromStr(hostPorts, argv[3], argv[2], uf);
 	} else {
-		std::cerr << "Missing CLI arguments, using defaults .." << std::endl
-		          << "usage: " << argv[0]
+		std::cerr << "usage: " << argv[0]
 		          << " [update-csv-file]|[[hostname] [password]] [update-file]"
 		          << std::endl << std::endl;
 		return 1;

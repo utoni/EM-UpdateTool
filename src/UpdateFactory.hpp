@@ -74,4 +74,6 @@ private:
 
 int loadUpdateFactoriesFromCSV(const char *csv_file, const char *update_file, std::vector<UpdateFactory*>& update_list);
 
+void loadUpdateFactoriesFromStr(std::string& hostPorts, const char *update_file, const char *password, std::vector<UpdateFactory*>& update_list);
+
 #endif

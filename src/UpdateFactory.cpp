@@ -338,9 +338,48 @@ int loadUpdateFactoriesFromCSV(const char *csv_file, const char *update_file, st
 			update_list.push_back(uf);
 		}
 	} catch (io::error::with_file_line& err) {
-		err_line.push_back(err.file_line);
+		err_line.push_back(err.file_line); /* not used atm */
 	} catch (io::error::with_file_name& err) {
 	}
 
 	return UPDATE_OK;
+}
+
+static void parseHostPort(std::string& hostPort, UpdateFactory *uf)
+{
+	int port = 80;
+	size_t colon = hostPort.find_first_of(":");
+	std::string host;
+
+	if (colon != std::string::npos) {
+		try {
+			port = std::stoi(hostPort.substr(colon + 1));
+		} catch (std::invalid_argument& err) {
+			port = 80;
+		}
+	}
+	host = hostPort.substr(0, colon);
+	uf->setDest(host, port);
+}
+
+void loadUpdateFactoriesFromStr(std::string& hostPorts, const char *update_file, const char *password, std::vector<UpdateFactory*>& update_list)
+{
+	size_t start = 0;
+	size_t end = hostPorts.find_first_of(",");
+
+	if (end == std::string::npos)
+		end = hostPorts.length();
+	while (start < end) {
+		UpdateFactory *uf = new UpdateFactory();
+		std::string hostPort = hostPorts.substr(start, end - start);
+		parseHostPort(hostPort, uf);
+		uf->setUpdateFile(update_file);
+		uf->setPass(password);
+		update_list.push_back(uf);
+
+		start = ++end;
+		end = hostPorts.find_first_of(",", start);
+		if (end == std::string::npos)
+			end = hostPorts.length();
+	}
 }
