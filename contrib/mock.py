@@ -68,4 +68,8 @@ if __name__ == '__main__':
     except IndexError:
         listen_adr = '127.0.0.1'
     print 'Listen Address:', listen_adr
-    run(host=listen_adr, port=80)
+    try:
+        listen_port = argv[3]
+    except IndexError:
+        listen_port = 80
+    run(host=listen_adr, port=listen_port)
