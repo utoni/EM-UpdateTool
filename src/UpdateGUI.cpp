@@ -18,6 +18,7 @@ wxBEGIN_EVENT_TABLE(UpdateGUIFrame, wxFrame)
 	EVT_MENU(wxID_ABOUT,      UpdateGUIFrame::OnAbout)
 	EVT_MENU(wxID_EDITOR,     UpdateGUIFrame::OnEditor)
 	EVT_MENU(wxID_UPDATEFILE, UpdateGUIFrame::OnUpdateFile)
+	EVT_MENU(wxID_IMPORTCSV,  UpdateGUIFrame::OnImportCSV)
 	EVT_MENU(wxID_DOUPDATE,   UpdateGUIFrame::OnUpdate)
 
 	EVT_BUTTON(wxID_UPDATEFILE, UpdateGUIFrame::OnUpdateFile)
@@ -48,6 +49,10 @@ UpdateGUIFrame::UpdateGUIFrame(const wxString& title, const wxPoint& pos, const 
 	menuFile->Append(wxID_DOUPDATE,
 	                 "&Submit\tCtrl-U",
 	                 "Start the firmware update process.");
+	menuFile->AppendSeparator();
+	menuFile->Append(wxID_IMPORTCSV,
+	                 "&Import CSV ...\tCtrl-I",
+	                 "Import a CSV table from file.");
 	menuFile->AppendSeparator();
 	menuFile->Append(wxID_EXIT);
 
@@ -252,7 +257,6 @@ void UpdateGUIFrame::OnUpdate(wxCommandEvent& event)
 		jobs->AddJob(Job(Job::eID_THREAD_JOB, JobArgs(jobid, *u)));
 		delete u;
 	}
-	SetStatusText(wxT("Jobs started."));
 }
 
 void UpdateGUIFrame::OnNavigationKey(wxNavigationKeyEvent& event)
@@ -279,7 +283,7 @@ void UpdateGUIFrame::OnThread(wxCommandEvent& event)
 
 			switch (event.GetId()) {
 				case Job::eID_THREAD_JOB: SetStatusText(wxs); break;
-				case Job::eID_THREAD_MSGOK: tp = RTL_GREEN; break;
+				case Job::eID_THREAD_MSGOK: SetStatusText(wxs); tp = RTL_GREEN; break;
 				case Job::eID_THREAD_MSGERR: tp = RTL_RED; break;
 			}
 			tLog(tp, wxs);
