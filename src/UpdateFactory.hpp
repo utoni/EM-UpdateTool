@@ -18,12 +18,18 @@
 
 
 enum EMCVersion {
-	EMC_150, EMC_204,
-	EMC_204RC5, EMC_204RC6 /* only for testing */,
+	EMC_130, EMC_131, EMC_132, EMC_133, EMC_134, EMC_135,
+	EMC_136, EMC_137, EMC_138, EMC_139,
+	EMC_140, EMC_141, EMC_142, EMC_143, EMC_144, EMC_145,
+	EMC_146, EMC_147, EMC_148, EMC_149,
+	EMC_150, EMC_1501,
+	EMC_200, EMC_201, EMC_202, EMC_203, EMC_204,
+	EMC_204RC5, EMC_204RC6, /* only for testing */
 	EMC_UNKNOWN
 };
 
 enum EMCVersion mapEmcVersion(std::string& emc_version);
+std::string mapEmcVersion(enum EMCVersion ver);
 
 void mapEmcError(int error, std::string& out);
 
@@ -43,6 +49,7 @@ public:
 	const char *getUpdateFile() const { return this->update_file.c_str(); }
 	const char *getHostname() const { return this->hostname.c_str(); }
 	const char *getPassword() const { return this->passwd.c_str(); }
+	enum EMCVersion getVersion() const { return this->mapped_emc_version; }
 	int getPort() const { return this->port; }
 	int doAuth();
 	int loadUpdateFile();

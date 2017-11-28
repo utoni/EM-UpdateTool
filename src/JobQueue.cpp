@@ -57,6 +57,12 @@ void WorkerThread::doJob()
 			uf.setPass(job.m_Arg.password);
 
 			rv = uf.doAuth();
+			if (uf.getVersion() != EMC_UNKNOWN) {
+				m_pQueue->Report(Job::eID_THREAD_MSG,
+				    wxString::Format(wxT("Job #%d: Current EnergyManager version: %s"),
+				        m_ID, mapEmcVersion(uf.getVersion())));
+			}
+
 			if (rv != UPDATE_OK) {
 				mapEmcError(rv, err);
 				m_pQueue->Report(Job::eID_THREAD_MSGERR,

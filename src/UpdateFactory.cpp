@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <map>
+#include <unordered_map>
 #include <iomanip>
 
 #include "UpdateFactory.hpp"
@@ -21,10 +21,22 @@ static std::string toHex(const std::string& s, bool upper_case)
 }
 #endif
 
-/* Do not use `const char *` as key type. */
-static const std::map<const std::string, const enum EMCVersion> version_map = {
-	{ "1.50", EMC_150 },     { "2.04", EMC_204RC6 },
-	{ "2.04~rc5", EMC_150 }, { "2.04~rc6", EMC_204RC6 }
+/* Do not use `const char *` as key type, you'll run into trouble in mapEmcVersion!
+ * We use an unordered map here, so it is easy to check
+ * if a given version requires an update or not.
+ * Remember to retain the order of all mapped versions!
+ */
+static const std::unordered_map<std::string, const EMCVersion> version_map {
+	{ "1.30", EMC_130 }, { "1.31", EMC_131 }, { "1.32", EMC_132 }, { "1.33", EMC_133 },
+	{ "1.34", EMC_134 }, { "1.35", EMC_135 }, { "1.36", EMC_136 }, { "1.37", EMC_137 },
+	{ "1.38", EMC_138 }, { "1.39", EMC_139 },
+	{ "1.40", EMC_140 }, { "1.41", EMC_141 }, { "1.42", EMC_142 }, { "1.43", EMC_143 },
+	{ "1.44", EMC_144 }, { "1.45", EMC_145 }, { "1.46", EMC_146 }, { "1.47", EMC_147 },
+	{ "1.48", EMC_148 }, { "1.49", EMC_149 },
+	{ "1.50", EMC_150 }, { "1.501", EMC_1501 },
+	{ "2.00", EMC_200 }, { "2.01", EMC_201 }, { "2.02", EMC_202 }, { "2.03", EMC_203 },
+	{ "2.04", EMC_204 },
+	{ "2.04~rc5", EMC_204RC5 }, { "2.04~rc6", EMC_204RC6 }
 };
 
 enum EMCVersion mapEmcVersion(std::string& emc_version)
@@ -36,10 +48,18 @@ enum EMCVersion mapEmcVersion(std::string& emc_version)
 	}
 }
 
+std::string mapEmcVersion(EMCVersion ver)
+{
+	for (auto& v : version_map)
+		if (v.second == ver)
+			return v.first;
+	return "";
+}
+
 static const std::map<const int, const std::string> error_map = {
 	{ UPDATE_OK,         "Update succeeded" },
 	{ UPDATE_HTTP_ERROR, "HTTP connection failed" },
-	{ UPDATE_HTTP_NOT200,"HTTP Error (not an EnergyManager)" },
+	{ UPDATE_HTTP_NOT200,"HTTP Response Error (not an EnergyManager)" },
 	{ UPDATE_HTTP_SID,   "No Session ID found (not an EnergyManager)" },
 	{ UPDATE_JSON_ERROR, "Invalid JSON HTTP response (not an EnergyManager)" },
 	{ UPDATE_AUTH_ERROR, "Authentication failed" },
@@ -177,8 +197,11 @@ int UpdateFactory::doAuth()
 		genRequest(req, "/start.php", ostr.str().c_str());
 		if (!doPost(req, res2))
 			return UPDATE_HTTP_ERROR;
-		if (res2.status != 200)
-			return UPDATE_HTTP_NOT200;
+		switch (res2.status) {
+			case 403: return UPDATE_AUTH_ERROR;
+			case 200: break;
+			default:  return UPDATE_HTTP_NOT200;
+		}
 		if (!parseJsonResult(res2, json, errmsg))
 			return UPDATE_JSON_ERROR;
 		dump_json(json);
@@ -226,7 +249,9 @@ int UpdateFactory::doUpdate()
 	if (!parseJsonResult(res1, json, errmsg)) {
 		return UPDATE_JSON_ERROR;
 	}
-	//dump_json(json);
+#if 0
+	dump_json(json);
+#endif
 
 	/* The update process itself. */
 	std::ostringstream ostr;
@@ -246,8 +271,12 @@ int UpdateFactory::doUpdate()
 	req.set_header("Content-Type", "multipart/form-data; boundary=----WebKitFormBoundaryUPDATETOOL");
 	if (!doPost(req, res2))
 		return UPDATE_HTTP_ERROR;
-	if (res2.status != 200)
-		return UPDATE_HTTP_NOT200;
+	switch (res2.status) {
+		case 403: return UPDATE_AUTH_ERROR;
+		case 302: /* HTTP Redirect */
+		case 200: break;
+		default:  return UPDATE_HTTP_NOT200;
+	}
 
 	return UPDATE_OK;
 }
