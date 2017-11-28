@@ -275,7 +275,7 @@ void UpdateGUIFrame::OnThread(wxCommandEvent& event)
 		case Job::eID_THREAD_MSG:
 		case Job::eID_THREAD_MSGOK:
 		case Job::eID_THREAD_MSGERR:
-			wxs = wxString::Format(wxT("Thread [%i]: \"%s\""), event.GetInt(), event.GetString().c_str());
+			wxs = wxString::Format(wxT("Thread [%i]: %s"), event.GetInt(), event.GetString().c_str());
 
 			switch (event.GetId()) {
 				case Job::eID_THREAD_JOB: SetStatusText(wxs); break;

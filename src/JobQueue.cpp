@@ -60,7 +60,7 @@ void WorkerThread::doJob()
 			if (uf.getVersion() != EMC_UNKNOWN) {
 				m_pQueue->Report(Job::eID_THREAD_MSG,
 				    wxString::Format(wxT("Job #%d: Current EnergyManager version: %s"),
-				        m_ID, mapEmcVersion(uf.getVersion())));
+				        job.m_Arg.jobid, mapEmcVersion(uf.getVersion())), m_ID);
 			}
 
 			if (rv != UPDATE_OK) {
