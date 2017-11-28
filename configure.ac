@@ -36,12 +36,11 @@ UTOOL_RELEASE=${utool_major_version_number}.${utool_minor_version_number}
 UTOOL_VERSION=${UTOOL_RELEASE}.${utool_release_number}
 
 AC_ARG_ENABLE([gui],
-	[AS_HELP_STRING([--enable-gui], [Build the UpdateTool with a wxWidgets based GUI instead of a simple CLI (default enabled).])],,
-	[ut_buildgui=yes])
+	[AS_HELP_STRING([--disable-gui], [Build the UpdateTool with a wxWidgets based GUI instead of a simple CLI (default enabled).])],,[ut_buildgui=yes])
 ut_buildgui=$(echo ${ut_buildgui})
 case ${ut_buildgui} in
-	''|1|y|yes) ut_buildgui=yes ;;
-	no) ut_buildgui= ;;
+	1|y|yes) ut_buildgui=yes ;;
+	''|0|n|no) ut_buildgui= ;;
 	*) AC_MSG_ERROR([unknown option '${ut_buildgui}' for --enable-gui]) ;;
 esac
 
@@ -51,7 +50,7 @@ AC_ARG_ENABLE([host-wxwidgets],
 enable_host_wxwidgets=$(echo ${enable_host_wxwidgets})
 case ${enable_host_wxwidgets} in
 	''|1|y|yes) enable_host_wxwidgets=yes ;;
-	no) enable_host_wxwidgets= ;;
+	0|n|no) enable_host_wxwidgets= ;;
 	*) AC_MSG_ERROR([unknown option '${enable_host_wxwidgets}' for --enable-host-wxwidgets]) ;;
 esac
 if test x"${ut_buildgui}" != x"yes"; then
