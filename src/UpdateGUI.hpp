@@ -45,6 +45,7 @@ private:
 	void OnUpdateFile(wxCommandEvent& event);
 	void OnImportCSV(wxCommandEvent& event);
 	void OnUpdate(wxCommandEvent& event);
+	void OnNavigationKey(wxNavigationKeyEvent& event);
 	void OnThread(wxCommandEvent& event);
 
 	wxDECLARE_EVENT_TABLE();

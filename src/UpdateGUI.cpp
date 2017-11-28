@@ -24,6 +24,8 @@ wxBEGIN_EVENT_TABLE(UpdateGUIFrame, wxFrame)
 	EVT_BUTTON(wxID_IMPORTCSV,  UpdateGUIFrame::OnImportCSV)
 	EVT_BUTTON(wxID_DOUPDATE,   UpdateGUIFrame::OnUpdate)
 
+	EVT_NAVIGATION_KEY(UpdateGUIFrame::OnNavigationKey)
+
 	EVT_COMMAND(wxID_ANY, wxEVT_THREAD, UpdateGUIFrame::OnThread)
 wxEND_EVENT_TABLE()
 
@@ -76,10 +78,10 @@ UpdateGUIFrame::UpdateGUIFrame(const wxString& title, const wxPoint& pos, const 
 	subBox->Add(subButton, 0, wxALL, 5);
 	subBox->AddStretchSpacer();
 	ipEntry   = new wxTextCtrl(this, wxID_IP, wxEmptyString, wxDefaultPosition,
-	    wxDefaultSize, wxTE_PROCESS_TAB);
+	    wxDefaultSize, 0);
 	ipBox->Add(ipEntry, 1, wxEXPAND|wxALL, 5);
 	pwEntry   = new wxTextCtrl(this, wxID_PW, wxEmptyString, wxDefaultPosition,
-	    wxDefaultSize, wxTE_PASSWORD | wxTE_PROCESS_TAB);
+	    wxDefaultSize, wxTE_PASSWORD);
 	pwBox->Add(pwEntry, 1, wxEXPAND|wxALL, 5);
 	imgEntry  = new wxTextCtrl(this, wxID_IMG, wxEmptyString, wxDefaultPosition,
 	    wxDefaultSize, wxTE_READONLY
@@ -251,6 +253,16 @@ void UpdateGUIFrame::OnUpdate(wxCommandEvent& event)
 		delete u;
 	}
 	SetStatusText(wxT("Jobs started."));
+}
+
+void UpdateGUIFrame::OnNavigationKey(wxNavigationKeyEvent& event)
+{
+	/* Try to use a wxPanel OR make wxButtons work! */
+	auto focused_window = FindFocus()->GetId();
+	switch (focused_window) {
+		case wxID_IP: pwEntry->SetFocus(); break;
+		default: ipEntry->SetFocus(); break;
+	}
 }
 
 void UpdateGUIFrame::OnThread(wxCommandEvent& event)
