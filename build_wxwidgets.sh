@@ -19,6 +19,8 @@ git checkout .
 cd ..
 mkdir -p "${WDIR}-${HOSTT:-host}"
 cd "${WDIR}-${HOSTT:-host}"
+
+# Verify: Do we need '-Wl,-gc-sections' since we are creating static lib archives?
 CXXFLAGS="-ffunction-sections -fdata-sections -Os -Wno-deprecated-declarations -Wno-misleading-indentation -Wno-undef"
 ../${WDIR}/configure --without-expat --disable-compat28 --disable-compat30 \
 	--disable-richtooltip --disable-richmsgdlg --disable-richtext \

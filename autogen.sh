@@ -1,5 +1,7 @@
 #!/bin/bash
 
+test -f ./Makefile && make distclean
+
 libtoolize --force
 aclocal
 autoheader
