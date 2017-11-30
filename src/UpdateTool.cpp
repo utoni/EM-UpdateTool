@@ -55,16 +55,24 @@ int main(int argc, char *argv[])
 	for (auto *u : uf) {
 		rv = u->doAuth();
 		mapEmcError(rv, errstr);
-		std::cerr << "doAuth returned " << rv << ": " << errstr << std::endl;
 		if (rv == UPDATE_OK) {
-			std::cerr << "uploading file " << u->getUpdateFile() << std::endl;
+			std::cerr << "loading file " << u->getUpdateFile() << std::endl;
 			rv = u->loadUpdateFile();
-			mapEmcError(rv, errstr);
-			std::cerr << "load file returned " << rv << ": " << errstr << std::endl;
-			rv = u->doUpdate();
-			mapEmcError(rv, errstr);
-			std::cerr << "doUpdate returned " << rv << ": " << errstr << std::endl;
-		}
+			std::cerr << "firmware version: " << mapEmcVersion(u->getFwVersion()) << std::endl;
+			if (rv == UPDATE_OK) {
+				std::cerr << "uploading file " << u->getUpdateFile() << std::endl;
+				rv = u->doUpdate();
+				if (rv == UPDATE_OK) {
+					std::cerr << "Update succeeded!" << std::endl;
+				} else {
+					mapEmcError(rv, errstr);
+					std::cerr << "doUpdate returned " << rv << ": " << errstr << std::endl;
+				}
+			} else {
+				mapEmcError(rv, errstr);
+				std::cerr << "load file returned " << rv << ": " << errstr << std::endl;
+			}
+		} else std::cerr << "doAuth returned " << rv << ": " << errstr << std::endl;
 	}
 
 	for (auto *u : uf) {

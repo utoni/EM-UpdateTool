@@ -14,7 +14,8 @@
 #define UPDATE_JSON_ERROR  4
 #define UPDATE_AUTH_ERROR  5
 #define UPDATE_VERSION     6
-#define UPDATE_FILE        7
+#define UPDATE_UPDATED     7
+#define UPDATE_FILE        8
 
 
 enum EMCVersion {
@@ -30,6 +31,7 @@ enum EMCVersion {
 
 enum EMCVersion mapEmcVersion(std::string& emc_version);
 std::string mapEmcVersion(enum EMCVersion ver);
+bool isEmcVersionLowerThen(enum EMCVersion ver, enum EMCVersion check_ver);
 
 void mapEmcError(int error, std::string& out);
 
@@ -49,7 +51,8 @@ public:
 	const char *getUpdateFile() const { return this->update_file.c_str(); }
 	const char *getHostname() const { return this->hostname.c_str(); }
 	const char *getPassword() const { return this->passwd.c_str(); }
-	enum EMCVersion getVersion() const { return this->mapped_emc_version; }
+	enum EMCVersion getEmcVersion() const { return this->mapped_emc_version; }
+	enum EMCVersion getFwVersion() const { return this->mapped_firmware_version; }
 	int getPort() const { return this->port; }
 	int doAuth();
 	int loadUpdateFile();
@@ -58,9 +61,8 @@ public:
 protected:
 	std::string phpsessid;
 	std::string emc_serial;
-	std::string emc_version;
 	bool authenticated;
-	enum EMCVersion mapped_emc_version;
+	enum EMCVersion mapped_emc_version, mapped_firmware_version;
 	std::string update_file;
 	std::string passwd;
 	std::vector<unsigned char> update_buffer;

@@ -185,6 +185,7 @@ void UpdateGUIFrame::OnAbout(wxCommandEvent& event)
 	aboutInfo.SetWebSite(PACKAGE_URL);
 	aboutInfo.AddDeveloper("Toni Uhlig");
 	aboutInfo.AddDeveloper("Valeri Budjko");
+	aboutInfo.AddDeveloper("Theres Teichmann");
 	wxAboutBox(aboutInfo, this);
 }
 

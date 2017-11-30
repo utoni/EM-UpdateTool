@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <sstream>
 #include <unordered_map>
@@ -6,6 +7,9 @@
 
 #include "UpdateFactory.hpp"
 #include "Csv.hpp"
+
+/* update image trailer data structure */
+#include "trailer.h"
 
 
 /* debug only */
@@ -53,7 +57,24 @@ std::string mapEmcVersion(EMCVersion ver)
 	for (auto& v : version_map)
 		if (v.second == ver)
 			return v.first;
-	return "";
+	return "Unknown";
+}
+
+bool isEmcVersionLowerThen(enum EMCVersion ver, enum EMCVersion check_ver)
+{
+	size_t i = 0, j = 0;
+
+	for (auto& v : version_map) {
+		i++;
+		if (v.second == ver)
+			break;
+	}
+	for (auto& v : version_map) {
+		j++;
+		if (v.second == check_ver)
+			break;
+	}
+	return (i > j);
 }
 
 static const std::map<const int, const std::string> error_map = {
@@ -64,6 +85,7 @@ static const std::map<const int, const std::string> error_map = {
 	{ UPDATE_JSON_ERROR, "Invalid JSON HTTP response (not an EnergyManager)" },
 	{ UPDATE_AUTH_ERROR, "Authentication failed" },
 	{ UPDATE_VERSION,    "Invalid EnergyManager version" },
+	{ UPDATE_UPDATED,    "EnergyManager already updated to an equal or higher firmware version" },
 	{ UPDATE_FILE,       "Could not open update file" }
 };
 
@@ -100,8 +122,8 @@ inline void dump_class(UpdateFactory *uf)
 		std::cerr << "Host...: " << uf->hostname << ":" << uf->port << std::endl;
 	if (!uf->emc_serial.empty())
 		std::cerr << "Serial.: " << uf->emc_serial << std::endl;
-	if (!uf->emc_version.empty())
-		std::cerr << "Version: " << uf->emc_version << std::endl;
+	if (uf->mapped_emc_version != EMC_UNKNOWN)
+		std::cerr << "Version: " << mapEmcVersion(uf->mapped_emc_version) << std::endl;
 }
 
 void UpdateFactory::setDest(const char *hostname, int port)
@@ -112,9 +134,9 @@ void UpdateFactory::setDest(const char *hostname, int port)
 	http_client = new httplib::Client(hostname, port);
 	phpsessid   = "";
 	emc_serial  = "";
-	emc_version = "";
 	authenticated = false;
 	mapped_emc_version = EMC_UNKNOWN;
+	mapped_firmware_version = EMC_UNKNOWN;
 }
 
 void UpdateFactory::setDest(std::string& hostname, int port)
@@ -166,7 +188,7 @@ int UpdateFactory::doAuth()
 	httplib::Request req;
 	httplib::Response res1, res2;
 	json11::Json json;
-	std::string errmsg;
+	std::string errmsg, fw_ver;
 
 	if (!http_client)
 		return UPDATE_HTTP_ERROR;
@@ -184,8 +206,8 @@ int UpdateFactory::doAuth()
 
 	dump_json(json);
 	emc_serial = json["serial"].string_value();
-	emc_version = json["app_version"].string_value();
-	mapped_emc_version = mapEmcVersion(emc_version);
+	fw_ver = json["app_version"].string_value();
+	mapped_emc_version = mapEmcVersion(fw_ver);
 	if (mapped_emc_version == EMC_UNKNOWN)
 		return UPDATE_VERSION;
 	authenticated = json["authentication"].bool_value();
@@ -214,14 +236,24 @@ int UpdateFactory::doAuth()
 
 int UpdateFactory::loadUpdateFile()
 {
-	std::ifstream input(update_file, std::ios::binary);
+	struct update_trailer trl;
+	std::ifstream input(update_file, std::ifstream::in | std::ios::binary);
+	std::string fw_ver;
+
 	if (!input)
 		return UPDATE_FILE;
+
 	std::vector<unsigned char> buffer(
 	   (std::istreambuf_iterator<char>(input)),
 	   (std::istreambuf_iterator<char>())
 	);
+	if (buffer.size() < sizeof(trl))
+		return UPDATE_VERSION;
+
 	update_buffer = buffer;
+	fw_ver = std::string(buffer.end() - sizeof(trl), buffer.end() - sizeof(trl) + sizeof(trl.version));
+	fw_ver = std::string(fw_ver.c_str()); /* discard trailed NUL bytes */
+	mapped_firmware_version = mapEmcVersion(fw_ver);
 
 	return UPDATE_OK;
 }
@@ -235,7 +267,7 @@ int UpdateFactory::doUpdate()
 
 	if (!http_client)
 		return UPDATE_HTTP_ERROR;
-	if (mapped_emc_version == EMC_UNKNOWN)
+	if (mapped_emc_version == EMC_UNKNOWN || mapped_firmware_version == EMC_UNKNOWN)
 		return UPDATE_VERSION;
 	if (!authenticated)
 		return UPDATE_AUTH_ERROR;
@@ -289,7 +321,6 @@ void UpdateFactory::cleanup()
 	}
 	authenticated = false;
 	emc_serial = "";
-	emc_version = "";
 }
 
 void UpdateFactory::genRequest(httplib::Request& req, const char *path,

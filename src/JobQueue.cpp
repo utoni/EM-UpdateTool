@@ -57,10 +57,10 @@ void WorkerThread::doJob()
 			uf.setPass(job.m_Arg.password);
 
 			rv = uf.doAuth();
-			if (uf.getVersion() != EMC_UNKNOWN) {
+			if (uf.getEmcVersion() != EMC_UNKNOWN) {
 				m_pQueue->Report(Job::eID_THREAD_MSG,
 				    wxString::Format(wxT("Job #%d: Current EnergyManager version: %s"),
-				        job.m_Arg.jobid, mapEmcVersion(uf.getVersion())), m_ID);
+				        job.m_Arg.jobid, mapEmcVersion(uf.getEmcVersion())), m_ID);
 			}
 
 			if (rv != UPDATE_OK) {
@@ -72,10 +72,13 @@ void WorkerThread::doJob()
 			}
 
 			m_pQueue->Report(Job::eID_THREAD_MSG,
-			    wxString::Format(wxT("Job #%d: Uploading file \"%s\""),
+			    wxString::Format(wxT("Job #%d: Loading file \"%s\""),
 			        job.m_Arg.jobid, job.m_Arg.update_file), m_ID);
 			uf.setUpdateFile(job.m_Arg.update_file.c_str());
 			rv = uf.loadUpdateFile();
+			m_pQueue->Report(Job::eID_THREAD_MSG,
+			    wxString::Format(wxT("Job #%d: Firmware image version: %s"),
+			        job.m_Arg.jobid, mapEmcVersion(uf.getFwVersion())), m_ID);
 			if (rv != UPDATE_OK) {
 				mapEmcError(rv, err);
 				m_pQueue->Report(Job::eID_THREAD_MSGERR,
@@ -84,6 +87,9 @@ void WorkerThread::doJob()
 				break;
 			}
 
+			m_pQueue->Report(Job::eID_THREAD_MSG,
+			    wxString::Format(wxT("Job #%d: Uploading file \"%s\""),
+			        job.m_Arg.jobid, job.m_Arg.update_file), m_ID);
 			rv = uf.doUpdate();
 			mapEmcError(rv, err);
 			if (rv != UPDATE_OK) {
