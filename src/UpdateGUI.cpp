@@ -9,6 +9,7 @@
 #include <chrono>
 #include <ctime>
 #include <wx/aboutdlg.h>
+#include <wx/msgdlg.h>
 
 
 wxBEGIN_EVENT_TABLE(UpdateGUIFrame, wxFrame)
@@ -147,6 +148,21 @@ void UpdateGUIFrame::tLog(enum LogType type, std::string& text, const char *iden
 
 void UpdateGUIFrame::OnClose(wxCloseEvent& event)
 {
+	if (!threads.empty() && jobs->Stacksize() > 0) {
+		std::ostringstream log;
+		log << "You have " << jobs->Stacksize() << " pending job(s). Quit?";
+
+		wxMessageDialog dlg(this, log.str(), wxMessageBoxCaptionStr,
+		    wxYES_NO | wxCENTRE | wxICON_QUESTION);
+		dlg.SetYesNoLabels("&Quit", "&Don't quit");
+		switch (dlg.ShowModal()) {
+			case wxID_YES: break;
+			case wxID_NO:
+			default: dlg.Destroy(); return;
+		}
+		dlg.Destroy();
+	}
+
 	for (unsigned i = 0; i < threads.size(); ++i) {
 		jobs->AddJob(Job(Job::eID_THREAD_EXIT, JobArgs()), Queue::eHIGHEST);
 	}
@@ -221,6 +237,11 @@ void UpdateGUIFrame::OnImportCSV(wxCommandEvent& event)
 	wxFileDialog openFileDialog(this, _("Select Update CSV"), "", "",
 	                            "image files (*.csv)|*.csv", wxFD_OPEN|wxFD_FILE_MUST_EXIST);
 
+	if (imgEntry->GetValue().empty()) {
+		tLog(RTL_RED, "A firmware image is required!");
+		return;
+	}
+
 	if (openFileDialog.ShowModal() == wxID_CANCEL) {
 		openFileDialog.Destroy();
 		return;
@@ -233,9 +254,10 @@ void UpdateGUIFrame::OnImportCSV(wxCommandEvent& event)
 		mapEmcError(rv, err);
 		tLog(RTL_RED, wxString::Format(wxT("CSV parse failed: \"%s\""), err));
 	}
+	int jobid = rand();
 	for (auto *u : uf) {
-		int jobid = rand();
 		jobs->AddJob(Job(Job::eID_THREAD_JOB, JobArgs(jobid, *u)));
+		jobid++;
 		delete u;
 	}
 	SetStatusText(wxString::Format(wxT("CSV Import %s"), openFileDialog.GetPath()));
@@ -244,12 +266,21 @@ void UpdateGUIFrame::OnImportCSV(wxCommandEvent& event)
 
 void UpdateGUIFrame::OnUpdate(wxCommandEvent& event)
 {
-	int jobid = rand();
 	std::vector<UpdateFactory*> uf;
 	std::string str;
 
+	if (ipEntry->GetValue().empty()) {
+		tLog(RTL_RED, "A hostname is required!");
+		return;
+	}
+	if (imgEntry->GetValue().empty()) {
+		tLog(RTL_RED, "A firmware image is required!");
+		return;
+	}
+
 	str = ipEntry->GetValue();
 	loadUpdateFactoriesFromStr(str, imgEntry->GetValue(), pwEntry->GetValue(), uf);
+	int jobid = rand();
 	for (auto *u : uf) {
 		std::ostringstream log;
 		log << "Update started ... (Job: #" << jobid << ")";
@@ -257,6 +288,8 @@ void UpdateGUIFrame::OnUpdate(wxCommandEvent& event)
 
 		jobs->AddJob(Job(Job::eID_THREAD_JOB, JobArgs(jobid, *u)));
 		delete u;
+
+		jobid++;
 	}
 }
 
