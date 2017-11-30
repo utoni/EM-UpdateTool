@@ -1,5 +1,6 @@
 AC_PREREQ(2.58)
 AC_INIT([UpdateTool], [1.0.0], [], [], [https://dl-website.tld/utool.exe])
+AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([src/config.h.in])
 AC_CONFIG_FILES([Makefile src/Makefile])
 
@@ -28,6 +29,7 @@ AC_FUNC_VPRINTF
 AC_FUNC_STAT
 AC_CHECK_FUNCS([malloc calloc realloc free memcmp memchr memcpy memmove memset putc putwc raise rand signal sprintf strchr strcmp strcoll strcpy strerror strftime strlen strncmp strncpy strpbrk strspn strstr strtol strtoul tolower toupper towlower towupper ungetc ungetwc vfprintf wcschr wcscmp wcscoll wcscpy wcspbrk wcsspn wcsstr wcstol wcstoul fopen fgets fprintf fputs fread fwrite getc fputc isalnum isalpha isupper time mktime gmtime close fclose feof exit],,
 	[AC_MSG_ERROR([Missing essential std functions.])])
+AX_CXX_COMPILE_STDCXX_11(, [mandatory])
 
 utool_major_version_number=1
 utool_minor_version_number=0
