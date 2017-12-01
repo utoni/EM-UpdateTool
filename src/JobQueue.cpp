@@ -76,9 +76,23 @@ void WorkerThread::doJob()
 			        job.m_Arg.jobid, job.m_Arg.update_file), m_ID);
 			uf.setUpdateFile(job.m_Arg.update_file.c_str());
 			rv = uf.loadUpdateFile();
+
+			if (uf.getFwVersion() == EMC_UNKNOWN) {
+				m_pQueue->Report(Job::eID_THREAD_MSG,
+				    wxString::Format(wxT("Job #%d: Invalid firmware update file"),
+				        job.m_Arg.jobid), m_ID);
+				break;
+			}
 			m_pQueue->Report(Job::eID_THREAD_MSG,
 			    wxString::Format(wxT("Job #%d: Firmware image version: %s"),
 			        job.m_Arg.jobid, mapEmcVersion(uf.getFwVersion())), m_ID);
+			if (!isEmcVersionLowerThen(uf.getEmcVersion(), uf.getFwVersion())) {
+				m_pQueue->Report(Job::eID_THREAD_MSGERR,
+					wxString::Format(wxT("Job #%d: Version mismatch (%s >= %s)"),
+						job.m_Arg.jobid, mapEmcVersion(uf.getEmcVersion()), mapEmcVersion(uf.getFwVersion())));
+				break;
+			}
+
 			if (rv != UPDATE_OK) {
 				mapEmcError(rv, err);
 				m_pQueue->Report(Job::eID_THREAD_MSGERR,

@@ -60,6 +60,11 @@ int main(int argc, char *argv[])
 			rv = u->loadUpdateFile();
 			std::cerr << "firmware version: " << mapEmcVersion(u->getFwVersion()) << std::endl;
 			if (rv == UPDATE_OK) {
+				if (!isEmcVersionLowerThen(u->getEmcVersion(), u->getFwVersion())) {
+					std::cerr << "version mismatch (" << mapEmcVersion(u->getEmcVersion())
+					    << " >= " << mapEmcVersion(u->getFwVersion()) << ")" << std::endl;
+					continue;
+				}
 				std::cerr << "uploading file " << u->getUpdateFile() << std::endl;
 				rv = u->doUpdate();
 				if (rv == UPDATE_OK) {
