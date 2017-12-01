@@ -1,5 +1,5 @@
 AC_PREREQ(2.58)
-AC_INIT([UpdateTool], [1.0.0], [], [], [https://www.b-control.com/home.html])
+AC_INIT([UpdateTool], [1.0.0rc2], [], [], [https://www.b-control.com/home.html])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([src/config.h.in])
 AC_CONFIG_FILES([Makefile src/Makefile])
