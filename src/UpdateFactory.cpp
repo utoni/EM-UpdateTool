@@ -31,16 +31,10 @@ static std::string toHex(const std::string& s, bool upper_case)
  * Remember to retain the order of all mapped versions!
  */
 static const std::vector<std::pair<std::string, const EMCVersion>> version_map {
-	{ "1.30", EMC_130 }, { "1.31", EMC_131 }, { "1.32", EMC_132 }, { "1.33", EMC_133 },
-	{ "1.34", EMC_134 }, { "1.35", EMC_135 }, { "1.36", EMC_136 }, { "1.37", EMC_137 },
 	{ "1.38", EMC_138 }, { "1.39", EMC_139 },
-	{ "1.40", EMC_140 }, { "1.41", EMC_141 }, { "1.42", EMC_142 }, { "1.43", EMC_143 },
-	{ "1.44", EMC_144 }, { "1.45", EMC_145 }, { "1.46", EMC_146 }, { "1.47", EMC_147 },
-	{ "1.48", EMC_148 }, { "1.49", EMC_149 },
-	{ "1.50", EMC_150 }, { "1.501", EMC_1501 },
+	{ "1.50", EMC_150 }, { "1.50.1", EMC_1501 },
 	{ "2.00", EMC_200 }, { "2.01", EMC_201 }, { "2.02", EMC_202 }, { "2.03", EMC_203 },
 	{ "2.04", EMC_204 },
-	{ "2.04~rc5", EMC_204RC5 }, { "2.04~rc6", EMC_204RC6 }
 };
 
 enum EMCVersion mapEmcVersion(std::string& emc_version)
