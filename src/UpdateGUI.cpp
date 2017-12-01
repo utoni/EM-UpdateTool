@@ -156,7 +156,7 @@ void UpdateGUIFrame::OnClose(wxCloseEvent& event)
 		    wxYES_NO | wxCENTRE | wxICON_QUESTION);
 		dlg.SetYesNoLabels("&Quit", "&Don't quit");
 		switch (dlg.ShowModal()) {
-			case wxID_YES: break;
+			case wxID_YES: Destroy(); return;
 			case wxID_NO:
 			default: dlg.Destroy(); return;
 		}
