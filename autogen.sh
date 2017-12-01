@@ -2,7 +2,6 @@
 
 test -f ./Makefile && make distclean
 
-libtoolize --force
 aclocal
 autoheader
 automake --force-missing --add-missing
