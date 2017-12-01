@@ -26,11 +26,11 @@ static std::string toHex(const std::string& s, bool upper_case)
 #endif
 
 /* Do not use `const char *` as key type, you'll run into trouble in mapEmcVersion!
- * We use an unordered map here, so it is easy to check
+ * We use a simple vector here, so it is easy to check
  * if a given version requires an update or not.
  * Remember to retain the order of all mapped versions!
  */
-static const std::unordered_map<std::string, const EMCVersion> version_map {
+static const std::vector<std::pair<std::string, const EMCVersion>> version_map {
 	{ "1.30", EMC_130 }, { "1.31", EMC_131 }, { "1.32", EMC_132 }, { "1.33", EMC_133 },
 	{ "1.34", EMC_134 }, { "1.35", EMC_135 }, { "1.36", EMC_136 }, { "1.37", EMC_137 },
 	{ "1.38", EMC_138 }, { "1.39", EMC_139 },
@@ -45,36 +45,44 @@ static const std::unordered_map<std::string, const EMCVersion> version_map {
 
 enum EMCVersion mapEmcVersion(std::string& emc_version)
 {
-	try {
-		return version_map.at(emc_version);
-	} catch (std::out_of_range) {
-		return EMC_UNKNOWN;
+	for (auto& v : version_map) {
+		if (v.first == emc_version) {
+			return v.second;
+		}
 	}
+	return EMC_UNKNOWN;
 }
 
 std::string mapEmcVersion(EMCVersion ver)
 {
-	for (auto& v : version_map)
-		if (v.second == ver)
+	for (auto& v : version_map) {
+		if (v.second == ver) {
 			return v.first;
+		}
+	}
 	return "Unknown";
 }
 
 bool isEmcVersionLowerThen(enum EMCVersion ver, enum EMCVersion check_ver)
 {
+	bool v_found = false, c_found = false;
 	size_t i = 0, j = 0;
 
 	for (auto& v : version_map) {
 		i++;
-		if (v.second == ver)
+		if (v.second == ver) {
+			v_found = true;
 			break;
+		}
 	}
 	for (auto& v : version_map) {
 		j++;
-		if (v.second == check_ver)
+		if (v.second == check_ver) {
+			c_found = true;
 			break;
+		}
 	}
-	return (i > j);
+	return v_found && c_found && (i < j);
 }
 
 static const std::map<const int, const std::string> error_map = {

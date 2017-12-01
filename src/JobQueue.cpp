@@ -89,7 +89,8 @@ void WorkerThread::doJob()
 			if (!isEmcVersionLowerThen(uf.getEmcVersion(), uf.getFwVersion())) {
 				m_pQueue->Report(Job::eID_THREAD_MSGERR,
 					wxString::Format(wxT("Job #%d: Version mismatch (%s >= %s)"),
-						job.m_Arg.jobid, mapEmcVersion(uf.getEmcVersion()), mapEmcVersion(uf.getFwVersion())));
+						job.m_Arg.jobid, mapEmcVersion(uf.getEmcVersion()),
+						mapEmcVersion(uf.getFwVersion())), m_ID);
 				break;
 			}
 
