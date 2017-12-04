@@ -353,7 +353,9 @@ void UpdateGUIFrame::OnThread(wxCommandEvent& event)
 							printAllJobsDone = true;
 						}
 						jobs->resetTotalJobsDone();
-					} else SetStatusText(wxs);
+					} else {
+						SetStatusText(wxs + wxString::Format(wxT(" (jobs remaining: %u)"), jobs->Stacksize() + jobs->getBusyWorker()));
+					}
 					break;
 				case Job::eID_THREAD_JOB: SetStatusText(wxs); break;
 				case Job::eID_THREAD_MSGOK: SetStatusText(wxs); tp = RTL_GREEN; break;
