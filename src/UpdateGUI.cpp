@@ -206,7 +206,7 @@ void UpdateGUIFrame::OnAbout(wxCommandEvent& event)
 	wxAboutDialogInfo aboutInfo;
 	aboutInfo.SetName(PACKAGE_NAME);
 	aboutInfo.SetVersion(PACKAGE_VERSION);
-	aboutInfo.SetDescription("A simple firmware update tool.");
+	aboutInfo.SetDescription("A simple firmware update tool for Energy Manager firmware.");
 	aboutInfo.SetCopyright("(C) 2017");
 	aboutInfo.SetWebSite(PACKAGE_URL);
 	aboutInfo.AddDeveloper("Toni Uhlig");
