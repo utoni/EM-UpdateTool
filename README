@@ -26,7 +26,11 @@ Build with a shipped (static) wxWidgets version
 
 2. Run `./autogen.sh`
 	and add an additional `--help` to set some package options.
+	You can cross compile for another architecture by setting `--host` and `--build` *explicitly*.
 	Example: `./autogen.sh --disable-gui`
+	         OR
+	         `./autogen.sh --host=i686-w64-mingw32 --build=x86_64-linux-gnu`
+	         (cross compile from x86_64 linux to i686 Windows x64-API)
 
 3. Run `make` or `make -j4` or `make -j4 V=1`
 	The argument -jN specifies the number of parallel build jobs.
@@ -37,10 +41,21 @@ Build with a dynamic wxWidgets version
 ======================================
 
 1. Run `./autogen.sh --enable-host-wxwidgets`
-	Build a dynamic linked version.
+	Build a binary which is dynamic linked against wxWidgets.
 
 2. Run `make` (see above)
 
 
 For a successful host-wxwudgets build you'll need an extra package.
 `./autogen.sh --enable-host-wxwidgets`: libwxbase3.0-dev
+
+
+Additional source packages used by this project
+===============================================
+
+Format: Project (LICENSE): URL
+
+wxWidgets (LGPL like - allowing static linking for closed-source projects): https://github.com/wxWidgets/wxWidgets
+Fast C++ CSV Parser (BSD-3): https://github.com/ben-strasser/fast-cpp-csv-parser
+cpp-httplib (The Boost Software License 1.0): https://github.com/yhirose/cpp-httplib
+json11 (Dropbox): https://github.com/dropbox/json11
