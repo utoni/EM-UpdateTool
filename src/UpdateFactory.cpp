@@ -88,7 +88,8 @@ static const std::map<const int, const std::string> error_map = {
 	{ UPDATE_AUTH_ERROR, "Authentication failed" },
 	{ UPDATE_VERSION,    "Invalid EnergyManager version" },
 	{ UPDATE_UPDATED,    "EnergyManager already updated to an equal or higher firmware version" },
-	{ UPDATE_FILE,       "Could not open update file" }
+	{ UPDATE_FILE,       "Could not open update file" },
+	{ UPDATE_CSV,        "Invalid CSV file format" }
 };
 
 void mapEmcError(int error, std::string& out)
@@ -384,24 +385,49 @@ bool UpdateFactory::parseJsonResult(httplib::Response& res, json11::Json& result
 	return !result.is_null();
 }
 
-int loadUpdateFactoriesFromCSV(const char *csv_file, const char *update_file, std::vector<UpdateFactory*>& update_list)
+int loadUpdateFactoriesFromCSV(const char *csv_file, const char *update_file, std::vector<UpdateFactory*>& update_list, std::vector<std::string>& error_list)
 {
 	std::vector<int> err_line;
 	io::CSVReader<3> in(csv_file);
-	in.read_header(io::ignore_extra_column, "hostname", "port", "password");
 	std::string hostname, port, passwd;
 
 	try {
-		while (in.read_row(hostname, port, passwd)) {
-			UpdateFactory *uf = new UpdateFactory();
+		in.read_header(io::ignore_extra_column, "hostname", "port", "password");
+	} catch (io::error::base& err) {
+		error_list.push_back(err.what());
+		return UPDATE_CSV;
+	} catch (...) {
+		error_list.push_back("Unknown error during CSV read header");
+		return UPDATE_CSV;
+	}
+
+	while (true) {
+		try {
+			if (!in.read_row(hostname, port, passwd))
+				break;
+		} catch (io::error::base& err) {
+			error_list.push_back(err.what());
+			continue;
+		} catch (...) {
+			error_list.push_back("Unknown error during CSV read row");
+			return UPDATE_CSV;
+		}
+
+		UpdateFactory *uf = new UpdateFactory();
+		/* try-catch invalid port numbers */
+		try {
+			if (port.length() == 0)
+				port = "80";
 			uf->setDest(hostname, port);
 			uf->setPass(passwd);
 			uf->setUpdateFile(update_file);
 			update_list.push_back(uf);
+		} catch (std::invalid_argument& err) {
+			error_list.push_back(std::string("Invalid value in line ")
+			    + std::to_string(in.get_file_line()) + std::string(" in file ")
+			    + std::string(csv_file));
+			delete uf;
 		}
-	} catch (io::error::with_file_line& err) {
-		err_line.push_back(err.file_line); /* not used atm */
-	} catch (io::error::with_file_name& err) {
 	}
 
 	return UPDATE_OK;

@@ -35,11 +35,14 @@ int main(int argc, char *argv[])
 	if (argc == 0)
 		return 1;
 	if (argc == 3) {
-		uf.clear();
-		rv = loadUpdateFactoriesFromCSV(argv[1], argv[2], uf);
+		std::vector<std::string> error_list;
+		rv = loadUpdateFactoriesFromCSV(argv[1], argv[2], uf, error_list);
 		if (rv != UPDATE_OK) {
 			std::cerr << "CSV file read \"" << argv[1] << "\" failed with: " << rv << std::endl;
 			return 1;
+		}
+		for (auto& errstr : error_list) {
+			std::cerr << "CSV read error: " << errstr << std::endl;
 		}
 	} else
 	if (argc == 4) {

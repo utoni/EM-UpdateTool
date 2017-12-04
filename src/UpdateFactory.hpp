@@ -16,6 +16,7 @@
 #define UPDATE_VERSION     6
 #define UPDATE_UPDATED     7
 #define UPDATE_FILE        8
+#define UPDATE_CSV         9
 
 
 enum EMCVersion {
@@ -51,8 +52,11 @@ public:
 	enum EMCVersion getEmcVersion() const { return this->mapped_emc_version; }
 	enum EMCVersion getFwVersion() const { return this->mapped_firmware_version; }
 	int getPort() const { return this->port; }
+	/** authenticate against a hostname */
 	int doAuth();
+	/** load an update file into memory */
 	int loadUpdateFile();
+	/** upload an update file */
 	int doUpdate();
 	friend void dump_class(UpdateFactory *uf);
 protected:
@@ -78,7 +82,7 @@ private:
 	int port;
 };
 
-int loadUpdateFactoriesFromCSV(const char *csv_file, const char *update_file, std::vector<UpdateFactory*>& update_list);
+int loadUpdateFactoriesFromCSV(const char *csv_file, const char *update_file, std::vector<UpdateFactory*>& update_list, std::vector<std::string>& error_list);
 
 void loadUpdateFactoriesFromStr(std::string& hostPorts, const char *update_file, const char *password, std::vector<UpdateFactory*>& update_list);
 

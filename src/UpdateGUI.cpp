@@ -43,6 +43,8 @@ bool UpdateGUI::OnInit()
 UpdateGUIFrame::UpdateGUIFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
           : wxFrame(NULL, wxID_ANY, title, pos, size)
 {
+	SetBackgroundColour(wxColour(220, 230, 250));
+
 	wxMenu *menuFile = new wxMenu;
 	menuFile->Append(wxID_UPDATEFILE,
 	                 "&Select Image ...\tCtrl-F",
@@ -85,6 +87,7 @@ UpdateGUIFrame::UpdateGUIFrame(const wxString& title, const wxPoint& pos, const 
 	subBox->AddStretchSpacer();
 	ipEntry   = new wxTextCtrl(this, wxID_IP, wxEmptyString, wxDefaultPosition,
 	    wxDefaultSize, 0);
+	ipEntry->SetHint(wxT("energymanager.tld,energymanager.tld:8080,192.168.0.1,192.168.0.1:8080"));
 	ipBox->Add(ipEntry, 1, wxEXPAND|wxALL, 5);
 	pwEntry   = new wxTextCtrl(this, wxID_PW, wxEmptyString, wxDefaultPosition,
 	    wxDefaultSize, wxTE_PASSWORD);
@@ -148,19 +151,19 @@ void UpdateGUIFrame::tLog(enum LogType type, std::string& text, const char *iden
 
 void UpdateGUIFrame::OnClose(wxCloseEvent& event)
 {
-	if (!threads.empty() && jobs->Stacksize() > 0) {
+	if (!threads.empty() && (jobs->Stacksize() > 0 || jobs->getBusyWorker() > 0)) {
 		std::ostringstream log;
-		log << "You have " << jobs->Stacksize() << " pending job(s). Quit?";
+		log << "You have " << jobs->Stacksize() << " pending and "
+		    << jobs->getBusyWorker() << " running job(s). Quit?";
 
 		wxMessageDialog dlg(this, log.str(), wxMessageBoxCaptionStr,
 		    wxYES_NO | wxCENTRE | wxICON_QUESTION);
 		dlg.SetYesNoLabels("&Quit", "&Don't quit");
 		switch (dlg.ShowModal()) {
-			case wxID_YES: Destroy(); return;
+			case wxID_YES: Destroy(); _exit(0);
 			case wxID_NO:
-			default: dlg.Destroy(); return;
+			default: return;
 		}
-		dlg.Destroy();
 	}
 
 	for (unsigned i = 0; i < threads.size(); ++i) {
@@ -216,7 +219,6 @@ void UpdateGUIFrame::OnUpdateFile(wxCommandEvent& event)
 	                            "image files (*.image)|*.image", wxFD_OPEN|wxFD_FILE_MUST_EXIST);
 
 	if (openFileDialog.ShowModal() == wxID_CANCEL) {
-		openFileDialog.Destroy();
 		return;
 	}
 
@@ -224,16 +226,14 @@ void UpdateGUIFrame::OnUpdateFile(wxCommandEvent& event)
 	imgEntry->AppendText(openFileDialog.GetPath());
 	log = wxString::Format(wxT("Update File: \"%s\""), openFileDialog.GetPath());
 	tLog(RTL_DEFAULT, log);
-
-	openFileDialog.Destroy();
 }
 
 void UpdateGUIFrame::OnImportCSV(wxCommandEvent& event)
 {
-	int rv;
+	int jobid;
 	std::vector<UpdateFactory*> uf;
-	std::string err;
 	wxString log;
+	std::vector<std::string> error_list;
 	wxFileDialog openFileDialog(this, _("Select Update CSV"), "", "",
 	                            "image files (*.csv)|*.csv", wxFD_OPEN|wxFD_FILE_MUST_EXIST);
 
@@ -243,25 +243,23 @@ void UpdateGUIFrame::OnImportCSV(wxCommandEvent& event)
 	}
 
 	if (openFileDialog.ShowModal() == wxID_CANCEL) {
-		openFileDialog.Destroy();
 		return;
 	}
 
 	log = wxString::Format(wxT("CSV File: \"%s\""), openFileDialog.GetPath());
 	tLog(RTL_DEFAULT, log);
-	rv = loadUpdateFactoriesFromCSV(openFileDialog.GetPath(), imgEntry->GetValue(), uf);
-	if (rv != UPDATE_OK) {
-		mapEmcError(rv, err);
-		tLog(RTL_RED, wxString::Format(wxT("CSV parse failed: \"%s\""), err));
+	loadUpdateFactoriesFromCSV(openFileDialog.GetPath(), imgEntry->GetValue(), uf, error_list);
+	for (auto& errstr : error_list) {
+		tLog(RTL_RED, wxString::Format(wxT("CSV read error: \"%s\""), errstr));
 	}
-	int jobid = rand();
+
+	jobid = rand();
 	for (auto *u : uf) {
 		jobs->AddJob(Job(Job::eID_THREAD_JOB, JobArgs(jobid, *u)));
 		jobid++;
 		delete u;
 	}
 	SetStatusText(wxString::Format(wxT("CSV Import %s"), openFileDialog.GetPath()));
-	openFileDialog.Destroy();
 }
 
 void UpdateGUIFrame::OnUpdate(wxCommandEvent& event)
@@ -279,6 +277,7 @@ void UpdateGUIFrame::OnUpdate(wxCommandEvent& event)
 	}
 
 	str = ipEntry->GetValue();
+	/* parse multiple hostname:port combinations */
 	loadUpdateFactoriesFromStr(str, imgEntry->GetValue(), pwEntry->GetValue(), uf);
 	int jobid = rand();
 	for (auto *u : uf) {
@@ -307,7 +306,15 @@ void UpdateGUIFrame::OnThread(wxCommandEvent& event)
 {
 	wxString wxs;
 	LogType tp = RTL_DEFAULT;
+	static size_t counter = 0;
 
+	/* some periodic informational output */
+	if ((++counter % 30) == 0) {
+		wxs = wxString::Format(wxT("%u jobs done, %u jobs pending, %u jobs running"), jobs->getTotalJobsDone(), jobs->Stacksize(), jobs->getBusyWorker());
+		tLog(RTL_DEFAULT, wxs);
+	}
+
+	/* process the wx event itself */
 	switch (event.GetId()) {
 		case Job::eID_THREAD_JOB:
 		case Job::eID_THREAD_MSG:
@@ -331,5 +338,12 @@ void UpdateGUIFrame::OnThread(wxCommandEvent& event)
 			SetStatusText(wxString::Format(wxT("Thread [%i]: Ready."), event.GetInt()));
 			break;
 		default: event.Skip();
+	}
+
+	/* give the user feedback if all jobs finished */
+	if (jobs->getTotalJobsDone() > 1 && jobs->Stacksize() == 0 && jobs->getBusyWorker() == 0) {
+		tLog(RTL_GREEN, "All jobs finished.");
+		jobs->resetTotalJobsDone();
+		counter = 0;
 	}
 }

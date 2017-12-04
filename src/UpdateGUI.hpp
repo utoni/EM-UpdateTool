@@ -35,9 +35,11 @@ public:
 protected:
 	UpdateFactory uf;
 private:
+	/* log to GUI */
 	void tLog(enum LogType type, const char *text, const char *ident=nullptr);
 	void tLog(enum LogType type, std::string& text, const char *ident=nullptr);
 
+	/* wxWidgets GUI/Thread events */
 	void OnClose(wxCloseEvent& event);
 	void OnExit(wxCommandEvent& event);
 	void OnAbout(wxCommandEvent& event);
@@ -50,12 +52,15 @@ private:
 
 	wxDECLARE_EVENT_TABLE();
 
+	/* GUI elements */
 	wxBoxSizer *mainVSizer;
 	wxStaticBoxSizer *ipBox, *pwBox, *imgBox, *subBox, *logBox;
 	wxButton *imgButton, *subButton, *csvButton;
 	wxTextCtrl *ipEntry, *pwEntry, *imgEntry, *logText;
 
+	/** JobQueue */
 	Queue *jobs;
+	/** Thread list IDs */
 	std::list<int> threads;
 };
 
