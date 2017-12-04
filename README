@@ -17,7 +17,7 @@ Windows:
 
 Untested:
 	- Windows non-GUI build
-	- Windows GUI build with a dynamic wxWidgets library
+	- Windows GUI build linked against a dynamic wxWidgets library
 
 
 Build with a shipped (static) wxWidgets version
