@@ -94,7 +94,7 @@ UpdateGUIFrame::UpdateGUIFrame(const wxString& title, const wxPoint& pos, const 
 	subBox->AddStretchSpacer();
 	ipEntry   = new wxTextCtrl(this, wxID_IP, wxEmptyString, wxDefaultPosition,
 	    wxDefaultSize, 0);
-	ipEntry->SetHint(wxT("energymanager.tld,energymanager.tld:8080,192.168.0.1,192.168.0.1:8080"));
+	ipEntry->SetHint(wxT("domain.local,domain.de:8080,192.168.0.1,192.168.0.1:8080"));
 	ipBox->Add(ipEntry, 1, wxEXPAND|wxALL, 5);
 	pwEntry   = new wxTextCtrl(this, wxID_PW, wxEmptyString, wxDefaultPosition,
 	    wxDefaultSize, wxTE_PASSWORD);
