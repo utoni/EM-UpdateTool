@@ -20,7 +20,8 @@ public:
 	      update_file(""), password("") {}
 	JobArgs(int jobid, UpdateFactory& uf)
 	    : jobid(jobid), hostname(uf.getHostname()),
-	      port(uf.getPort()), update_file(uf.getUpdateFile()), password(uf.getPassword()) {}
+	      port(uf.getPort()), update_file(uf.getUpdateFile()),
+	      password(uf.getPassword()) {}
 	JobArgs(int jobid, const char *hostname, int port,
 	        const char *update_file, const char *password)
 	    : jobid(jobid), hostname(hostname), port(port),
@@ -29,8 +30,10 @@ public:
 	        std::string& update_file, std::string& password)
 	    : jobid(jobid), hostname(hostname), port(port),
 	      update_file(update_file), password(password) {}
-		
+
+	/** randomized (not unique) Job ID */
 	int jobid;
+	/* minimum required data for our UpdateFactory */
 	std::string hostname;
 	int port;
 	std::string update_file;
@@ -67,7 +70,7 @@ class Queue
 {
 public:
 	enum JobPriority { eHIGHEST, eHIGHER, eNORMAL, eBELOW_NORMAL, eLOW, eIDLE };
-	Queue(wxEvtHandler *pParent) : m_pParent(pParent) {}
+	Queue(wxEvtHandler *pParent) : m_pParent(pParent), m_busyWorker(0), m_totalJobsDone(0) {}
 	/* push a job with given priority class onto the FIFO */
 	void AddJob(const Job& job, const JobPriority& priority = eNORMAL);
 	Job Pop();
@@ -78,12 +81,35 @@ public:
 		wxMutexLocker lock(m_MutexQueue);
 		return m_Jobs.size();
 	}
+	size_t getBusyWorker() {
+		wxMutexLocker lock(m_MutexBusyWorker);
+		return m_busyWorker;
+	}
+	size_t getTotalJobsDone() {
+		wxMutexLocker lock(m_MutexBusyWorker);
+		return m_totalJobsDone;
+	}
+	void resetTotalJobsDone() {
+		wxMutexLocker lock(m_MutexBusyWorker);
+		m_totalJobsDone = 0;
+	}
+	void incBusyWorker() {
+		wxMutexLocker lock(m_MutexBusyWorker);
+		m_busyWorker++;
+	}
+	void decBusyWorker() {
+		wxMutexLocker lock(m_MutexBusyWorker);
+		if (m_busyWorker > 0) m_busyWorker--;
+		m_totalJobsDone++;
+	}
 private:
+	/** main GUI EventHandler */
 	wxEvtHandler *m_pParent;
-	/* a priority Queue using std::multimap */
+	/** a priority Queue using std::multimap */
 	std::multimap<JobPriority, Job> m_Jobs;
-	wxMutex m_MutexQueue;
+	wxMutex m_MutexQueue, m_MutexBusyWorker;
 	wxSemaphore m_QueueCount;
+	size_t m_busyWorker, m_totalJobsDone;
 };
  
 class WorkerThread : public wxThread

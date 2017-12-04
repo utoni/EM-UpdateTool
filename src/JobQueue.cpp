@@ -45,11 +45,17 @@ void WorkerThread::doJob()
 	UpdateFactory uf;
 
 	Job job = m_pQueue->Pop();
+	m_pQueue->incBusyWorker();
+
+	/* process the job which was started by the GUI */
 	switch(job.m_cmd)
 	{
 		case Job::eID_THREAD_EXIT:
+			m_pQueue->decBusyWorker();
 			throw Job::eID_THREAD_EXIT;
 		case Job::eID_THREAD_JOB:
+			Sleep(1000); /* give the UI some time to handle a lot of new Jobs */
+
 			m_pQueue->Report(Job::eID_THREAD_MSG,
 			    wxString::Format(wxT("Job #%d: Connecting to %s:%i"),
 			        job.m_Arg.jobid, job.m_Arg.hostname, job.m_Arg.port), m_ID);
@@ -122,4 +128,5 @@ void WorkerThread::doJob()
 		default:
 			break;
 	}
+	m_pQueue->decBusyWorker();
 }
