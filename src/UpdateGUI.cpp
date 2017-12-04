@@ -43,7 +43,7 @@ bool UpdateGUI::OnInit()
 UpdateGUIFrame::UpdateGUIFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
           : wxFrame(NULL, wxID_ANY, title, pos, size)
 {
-	SetBackgroundColour(wxColour(220, 230, 250));
+	SetBackgroundColour(wxColour(220, 220, 220));
 
 	wxMenu *menuFile = new wxMenu;
 	menuFile->Append(wxID_UPDATEFILE,
