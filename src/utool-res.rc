@@ -1,0 +1,23 @@
+APPICON ICON "wxglade.ico"
+1 VERSIONINFO
+FILEVERSION     1,0,0,0
+PRODUCTVERSION  1,0,0,0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "080904E4"
+    BEGIN
+      VALUE "FileDescription", "A simple firmware update tool for Energy Manager firmware."
+      VALUE "FileVersion", "1.0.0"
+      VALUE "InternalName", "utool"
+      VALUE "LegalCopyright", "Toni Uhlig"
+      VALUE "OriginalFilename", "UpdateTool.exe"
+      VALUE "ProductName", "UpdateTool"
+      VALUE "ProductVersion", "1.0.0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x809, 1252
+  END
+END

@@ -15,3 +15,12 @@ utool_SOURCES += \
 	UpdateGUI.cpp \
 	JobQueue.cpp
 endif
+
+if HAVE_WINDRES
+utool_SOURCES += utool-res.rc
+
+.rc.o:
+	$(WINDRES) $^ -o $@
+.o : .rc
+	$(WINDRES) $^ -o $@
+endif

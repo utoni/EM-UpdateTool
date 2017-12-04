@@ -44,6 +44,13 @@ UpdateGUIFrame::UpdateGUIFrame(const wxString& title, const wxPoint& pos, const 
           : wxFrame(NULL, wxID_ANY, title, pos, size)
 {
 	SetBackgroundColour(wxColour(220, 220, 220));
+#ifdef WIN32
+	/* Set a pretty GUI icon (left-top window bar).
+	 * This requires the Icon to be compiled in a
+	 * resources section with the windres compiler!
+	 */
+	SetIcon(wxICON(APPICON));
+#endif
 
 	wxMenu *menuFile = new wxMenu;
 	menuFile->Append(wxID_UPDATEFILE,

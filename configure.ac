@@ -80,12 +80,17 @@ else
 	utool_wxdir=""
 fi
 
+AC_ARG_VAR(WINDRES, [Windows resource compiler command])
+
 ut_cflags=""
 ut_libs=""
 PROGRAM_EXT=
+windres=
 case "${host}" in
 	*-*-cygwin* | *-*-mingw32* )
+		AC_CHECK_TOOL(WINDRES, [windres])
 		PROGRAM_EXT=".exe"
+		windres="${host_alias}-windres"
 		ut_use_msw=yes
 		ut_cflags="${ut_cflags} -D_UNICODE=1 -municode"
 		ut_libs="${ut_libs} -static -lws2_32 -dynamic"
@@ -115,10 +120,12 @@ else
 fi
 
 AM_CONDITIONAL([UT_BUILDGUI], [test x"${ut_buildgui}" = xyes])
+AM_CONDITIONAL([HAVE_WINDRES], [test x"${windres}" != x])
 AC_SUBST([UT_CFLAGS], [${ut_cflags}])
 AC_SUBST([UT_LIBS],   [${ut_libs}])
 AC_SUBST([WX_CFLAGS], [${wx_cflags}])
 AC_SUBST([WX_LIBS],   [${wx_libs}])
+AC_SUBST([WINDRES],   [${windres}])
 
 AC_CONFIG_HEADERS([src/config.h:src/config.h.in])
 AC_OUTPUT
@@ -130,6 +137,7 @@ UpdateTool was configured with:
 	CFLAGS/CXXFLAGS..........: ${ut_cflags}
 	Build GUI................: ${ut_buildgui:-disabled}
 	Build for Windows........: ${ut_use_msw:-disabled}
+	Have windres.............: ${windres:-disabled}
 	Host wxWidgets...........: ${enable_host_wxwidgets:-disabled}
 	wxWidgets Version........: ${wx_version:-unknown}
 	wxWidgets CFLAGS/CXXFLAGS: ${wx_cflags}
