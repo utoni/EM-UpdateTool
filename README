@@ -1,6 +1,9 @@
 Howto Build
 ===========
 
+dependencies: binutils g++ autoconf automake
+You'll need a GCC suite version 5.* or higher (for full C++2011 support)!
+
 Basically there are four different possible build configurations which are (more or less) well-tested.
 All builds require a full C++2011 toolchain! Microsoft's VisualStudio2013 won't work since it's not fully C++2011 compatible!
 You can either use a Linux toolchain with g++/clang or a mingw64-g++ toolchain for Windows builds.
@@ -26,7 +29,7 @@ Build with a shipped (static) wxWidgets version
 
 2. Run `./autogen.sh`
 	and add an additional `--help` to set some package options.
-	You can cross compile for another architecture by setting `--host` and `--build` *explicitly*.
+	You can cross compile for other architectures/systems by setting `--host` and `--build` *explicitly*.
 	Example: `./autogen.sh --disable-gui`
 	         OR
 	         `./autogen.sh --host=i686-w64-mingw32 --build=x86_64-linux-gnu`
@@ -41,13 +44,13 @@ Build with a dynamic wxWidgets version
 ======================================
 
 1. Run `./autogen.sh --enable-host-wxwidgets`
-	Build a binary which is dynamic linked against wxWidgets.
+	Build a binary executable which is dynamic linked against a native wxWidgets library.
 
 2. Run `make` (see above)
 
 
-For a successful host-wxwudgets build you'll need an extra package.
-`./autogen.sh --enable-host-wxwidgets`: libwxbase3.0-dev
+For a successful host wxWidgets build you'll need at least one extra package:
+	libwxbase3.0-dev OR libwxbase3.1-dev
 
 
 Additional source packages used by this project
@@ -55,7 +58,7 @@ Additional source packages used by this project
 
 Format: Project (LICENSE): URL
 
-wxWidgets (LGPL like - allowing static linking for closed-source projects): https://github.com/wxWidgets/wxWidgets
+wxWidgets (wxWindows Library Licence): https://github.com/wxWidgets/wxWidgets
 Fast C++ CSV Parser (BSD-3): https://github.com/ben-strasser/fast-cpp-csv-parser
 cpp-httplib (The Boost Software License 1.0): https://github.com/yhirose/cpp-httplib
 json11 (Dropbox): https://github.com/dropbox/json11

@@ -205,6 +205,17 @@ void UpdateGUIFrame::OnAbout(wxCommandEvent& event)
 	aboutInfo.AddDeveloper("Toni Uhlig");
 	aboutInfo.AddDeveloper("Valeri Budjko");
 	aboutInfo.AddDeveloper("Theres Teichmann");
+	aboutInfo.SetLicense(wxString(
+		"TQ-Systems Software License Agreement Version 1.0.1\n\n"
+		"wxWindows: wxWindows Library Licence, Version 3.1\n"
+			"https://github.com/wxWidgets/wxWidgets\n\n"
+		"Fast C++ CSV Parser: BSD-3\n"
+			"https://github.com/ben-strasser/fast-cpp-csv-parser\n\n"
+		"cpp-httplib: Boost Software License - Version 1.0 - August 17th, 2003\n"
+			"https://github.com/yhirose/cpp-httplib\n\n"
+		"json11: MIT\n"
+			"https://github.com/dropbox/json11\n"
+	));
 	wxAboutBox(aboutInfo, this);
 }
 
