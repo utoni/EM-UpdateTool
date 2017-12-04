@@ -10,6 +10,7 @@ utool_SOURCES = \
 	Json.cpp \
 	UpdateFactory.cpp \
 	UpdateTool.cpp
+
 if UT_BUILDGUI
 utool_SOURCES += \
 	UpdateGUI.cpp \

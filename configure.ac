@@ -31,12 +31,6 @@ AC_CHECK_FUNCS([malloc calloc realloc free memcmp memchr memcpy memmove memset p
 	[AC_MSG_ERROR([Missing essential std functions.])])
 AX_CXX_COMPILE_STDCXX_11(, [mandatory])
 
-utool_major_version_number=1
-utool_minor_version_number=0
-utool_release_number=0
-UTOOL_RELEASE=${utool_major_version_number}.${utool_minor_version_number}
-UTOOL_VERSION=${UTOOL_RELEASE}.${utool_release_number}
-
 AC_ARG_ENABLE([gui],
 	[AS_HELP_STRING([--disable-gui], [Build the UpdateTool with a wxWidgets based GUI instead of a simple CLI (default enabled).])],,[ut_buildgui=yes])
 ut_buildgui=$(echo ${ut_buildgui})
@@ -90,7 +84,7 @@ case "${host}" in
 	*-*-cygwin* | *-*-mingw32* )
 		AC_CHECK_TOOL(WINDRES, [windres])
 		PROGRAM_EXT=".exe"
-		windres="${host_alias}-windres"
+		windres="${WINDRES:-}"
 		ut_use_msw=yes
 		ut_cflags="${ut_cflags} -D_UNICODE=1 -municode"
 		ut_libs="${ut_libs} -static -lws2_32 -dynamic"
