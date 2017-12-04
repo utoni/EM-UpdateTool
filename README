@@ -5,7 +5,7 @@ Basically there are four different possible build configurations which are (more
 All builds require a full C++2011 toolchain! Microsoft's VisualStudio2013 won't work since it's not fully C++2011 compatible!
 You can either use a Linux toolchain with g++/clang or a mingw64-g++ toolchain for Windows builds.
 
-Linux:
+Linux (Debian):
 	- non-GUI build
 	- GUI build linked against a static wxWidgets library
 	- GUI build linked against a dynamic wxWidgets library
@@ -30,7 +30,7 @@ Build with a shipped (static) wxWidgets version
 	Example: `./autogen.sh --disable-gui`
 	         OR
 	         `./autogen.sh --host=i686-w64-mingw32 --build=x86_64-linux-gnu`
-	         (cross compile from x86_64 linux to i686 Windows x64-API)
+	         (cross compile from x86_64 Linux to i686 Windows w64-SysApi)
 
 3. Run `make` or `make -j4` or `make -j4 V=1`
 	The argument -jN specifies the number of parallel build jobs.
