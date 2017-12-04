@@ -207,7 +207,7 @@ void UpdateGUIFrame::OnAbout(wxCommandEvent& event)
 	aboutInfo.AddDeveloper("Theres Teichmann");
 	aboutInfo.SetLicense(wxString(
 		"TQ-Systems Software License Agreement Version 1.0.1\n\n"
-		"wxWindows: wxWindows Library Licence, Version 3.1\n"
+		"wxWidgets: wxWindows Library Licence, Version 3.1\n"
 			"https://github.com/wxWidgets/wxWidgets\n\n"
 		"Fast C++ CSV Parser: BSD-3\n"
 			"https://github.com/ben-strasser/fast-cpp-csv-parser\n\n"
