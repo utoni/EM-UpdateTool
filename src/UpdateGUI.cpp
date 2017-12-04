@@ -120,7 +120,7 @@ UpdateGUIFrame::UpdateGUIFrame(const wxString& title, const wxPoint& pos, const 
 	Centre();
 	jobs = new Queue(this);
 	{
-		for (int tid = 1; tid <= 2; ++tid) {
+		for (int tid = 1; tid <= 3; ++tid) {
 			threads.push_back(tid);
 			WorkerThread* thread = new WorkerThread(jobs, tid);
 			if (thread) thread->Run();
@@ -325,6 +325,7 @@ void UpdateGUIFrame::OnThread(wxCommandEvent& event)
 	wxString wxs;
 	LogType tp = RTL_DEFAULT;
 	static size_t counter = 0;
+	bool printAllJobsDone = false;
 
 	/* some periodic informational output */
 	if ((++counter % 30) == 0) {
@@ -335,12 +336,25 @@ void UpdateGUIFrame::OnThread(wxCommandEvent& event)
 	/* process the wx event itself */
 	switch (event.GetId()) {
 		case Job::eID_THREAD_JOB:
+		case Job::eID_THREAD_JOB_DONE:
 		case Job::eID_THREAD_MSG:
 		case Job::eID_THREAD_MSGOK:
 		case Job::eID_THREAD_MSGERR:
 			wxs = wxString::Format(wxT("Thread [%i]: %s"), event.GetInt(), event.GetString().c_str());
 
 			switch (event.GetId()) {
+				case Job::eID_THREAD_JOB_DONE:
+					/* If more then one job was in the queue
+					 * inform the user about job completion.
+					 */
+					if (jobs->Stacksize() == 0 && jobs->getBusyWorker() == 0) {
+						if (jobs->getTotalJobsDone() > 1) {
+							counter = 0;
+							printAllJobsDone = true;
+						}
+						jobs->resetTotalJobsDone();
+					} else SetStatusText(wxs);
+					break;
 				case Job::eID_THREAD_JOB: SetStatusText(wxs); break;
 				case Job::eID_THREAD_MSGOK: SetStatusText(wxs); tp = RTL_GREEN; break;
 				case Job::eID_THREAD_MSGERR: tp = RTL_RED; break;
@@ -358,10 +372,8 @@ void UpdateGUIFrame::OnThread(wxCommandEvent& event)
 		default: event.Skip();
 	}
 
-	/* give the user feedback if all jobs finished */
-	if (jobs->getTotalJobsDone() > 1 && jobs->Stacksize() == 0 && jobs->getBusyWorker() == 0) {
+	if (printAllJobsDone) {
+		SetStatusText(wxT("All jobs finished."));
 		tLog(RTL_GREEN, "All jobs finished.");
-		jobs->resetTotalJobsDone();
-		counter = 0;
 	}
 }

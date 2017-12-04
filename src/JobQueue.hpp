@@ -53,6 +53,8 @@ public:
 		eID_THREAD_STARTED,
 		/* process normal job */
 		eID_THREAD_JOB,
+		/* job completed */
+		eID_THREAD_JOB_DONE,
 		/* process different messages in the frontend */
 		eID_THREAD_MSG,
 		eID_THREAD_MSGOK,

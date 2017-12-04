@@ -128,5 +128,8 @@ void WorkerThread::doJob()
 		default:
 			break;
 	}
+	m_pQueue->Report(Job::eID_THREAD_JOB_DONE,
+	    wxString::Format(wxT("Job #%d: finished."),
+	        job.m_Arg.jobid), m_ID);
 	m_pQueue->decBusyWorker();
 }
