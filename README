@@ -39,6 +39,10 @@ Build with a shipped (static) wxWidgets version
 	The argument -jN specifies the number of parallel build jobs.
 	The argument V=1 specifies a verbose compilation mode.
 
+4. Do not forget to strip the resulting executable with `make install DESTDIR=./tmp`.
+	Or you could run the strip program for yourself, e.g.: `i686-w64-mingw32-strip -s src/utool.exe`
+	Because size matters! (~16mb unstripped > ~3mb stripped!)
+
 
 Build with a dynamic wxWidgets version
 ======================================
@@ -47,6 +51,8 @@ Build with a dynamic wxWidgets version
 	Build a binary executable which is dynamic linked against a native wxWidgets library.
 
 2. Run `make` (see above)
+
+3. Strip the resulting executable (see above)
 
 
 For a successful host wxWidgets build you'll need at least one extra package:
