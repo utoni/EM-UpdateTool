@@ -37,6 +37,11 @@ CXXFLAGS="-ffunction-sections -fdata-sections -Os -Wno-deprecated-declarations -
 	--disable-shared ${HOSTARG} \
 	--disable-sys-libs \
 	--disable-debug --disable-debug_flag \
+	--disable-autoidman --disable-wxdib \
+	--disable-uiactionsim --disable-accessibility \
+	--disable-dragimage --disable-metafiles --disable-joystick \
+	--disable-hotkey --disable-busyinfo --disable-spline \
+	--disable-toolbook \
 	CXXFLAGS="${CXXFLAGS}"
 make -j${BUILDJOBS:-4} BUILD=release
 
