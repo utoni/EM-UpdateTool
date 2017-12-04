@@ -248,7 +248,7 @@ void UpdateGUIFrame::OnUpdateFile(wxCommandEvent& event)
 
 void UpdateGUIFrame::OnImportCSV(wxCommandEvent& event)
 {
-	int jobid;
+	size_t jobid, jobcount = 0;
 	std::vector<UpdateFactory*> uf;
 	wxString log;
 	std::vector<std::string> error_list;
@@ -264,8 +264,7 @@ void UpdateGUIFrame::OnImportCSV(wxCommandEvent& event)
 		return;
 	}
 
-	log = wxString::Format(wxT("CSV File: \"%s\""), openFileDialog.GetPath());
-	tLog(RTL_DEFAULT, log);
+	tLog(RTL_DEFAULT, wxString::Format(wxT("CSV File: \"%s\""), openFileDialog.GetPath()));
 	loadUpdateFactoriesFromCSV(openFileDialog.GetPath(), imgEntry->GetValue(), uf, error_list);
 	for (auto& errstr : error_list) {
 		tLog(RTL_RED, wxString::Format(wxT("CSV read error: \"%s\""), errstr));
@@ -276,8 +275,12 @@ void UpdateGUIFrame::OnImportCSV(wxCommandEvent& event)
 		jobs->AddJob(Job(Job::eID_THREAD_JOB, JobArgs(jobid, *u)));
 		jobid++;
 		delete u;
+		jobcount++;
 	}
-	SetStatusText(wxString::Format(wxT("CSV Import %s"), openFileDialog.GetPath()));
+
+	log = wxString::Format(wxT("CSV Import \"%s\": got %u Job(s)"), openFileDialog.GetPath(), jobcount);
+	tLog(RTL_GREEN, log);
+	SetStatusText(log);
 }
 
 void UpdateGUIFrame::OnUpdate(wxCommandEvent& event)
