@@ -357,6 +357,10 @@ socket_t create_socket(const char* host, int port, Fn fn, int socket_flags = 0)
        // Make 'reuse address' option available
        int yes = 1;
        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&yes, sizeof(yes));
+       // set a less conservative socket timeout
+       yes = 30000; // 30s timeout
+       setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&yes, sizeof(yes));
+       setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char*)&yes, sizeof(yes));
 
        // bind or connect
        if (fn(sock, *rp)) {
