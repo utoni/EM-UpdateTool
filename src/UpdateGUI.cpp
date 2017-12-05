@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <tuple>
 #include <chrono>
 #include <ctime>
 #include <wx/aboutdlg.h>
@@ -210,8 +211,6 @@ void UpdateGUIFrame::OnAbout(wxCommandEvent& event)
 	aboutInfo.SetCopyright("(C) 2017");
 	aboutInfo.SetWebSite(PACKAGE_URL);
 	aboutInfo.AddDeveloper("Toni Uhlig");
-	aboutInfo.AddDeveloper("Valeri Budjko");
-	aboutInfo.AddDeveloper("Theres Teichmann");
 	aboutInfo.SetLicense(wxString(
 		"TQ-Systems Software License Agreement Version 1.0.1\n\n"
 		"wxWidgets: wxWindows Library Licence, Version 3.1\n"
@@ -228,6 +227,7 @@ void UpdateGUIFrame::OnAbout(wxCommandEvent& event)
 
 void UpdateGUIFrame::OnEditor(wxCommandEvent& event)
 {
+	/* StatusLog Events: not used atm */
 }
 
 void UpdateGUIFrame::OnUpdateFile(wxCommandEvent& event)
@@ -266,10 +266,12 @@ void UpdateGUIFrame::OnImportCSV(wxCommandEvent& event)
 
 	tLog(RTL_DEFAULT, wxString::Format(wxT("CSV File: \"%s\""), openFileDialog.GetPath()));
 	loadUpdateFactoriesFromCSV(openFileDialog.GetPath(), imgEntry->GetValue(), uf, error_list);
+	/* check for CSV read errors */
 	for (auto& errstr : error_list) {
 		tLog(RTL_RED, wxString::Format(wxT("CSV read error: \"%s\""), errstr));
 	}
 
+	/* add all csv jobs to the job queue */
 	jobid = rand();
 	for (auto *u : uf) {
 		jobs->AddJob(Job(Job::eID_THREAD_JOB, JobArgs(jobid, *u)));
@@ -300,6 +302,7 @@ void UpdateGUIFrame::OnUpdate(wxCommandEvent& event)
 	str = ipEntry->GetValue();
 	/* parse multiple hostname:port combinations */
 	loadUpdateFactoriesFromStr(str, imgEntry->GetValue(), pwEntry->GetValue(), uf);
+	/* add all jobs to the job queue */
 	int jobid = rand();
 	for (auto *u : uf) {
 		std::ostringstream log;
@@ -307,8 +310,7 @@ void UpdateGUIFrame::OnUpdate(wxCommandEvent& event)
 		tLog(RTL_DEFAULT, log.str().c_str());
 
 		jobs->AddJob(Job(Job::eID_THREAD_JOB, JobArgs(jobid, *u)));
-		delete u;
-
+		delete u; /* do not leak heap memory */
 		jobid++;
 	}
 }
@@ -323,12 +325,38 @@ void UpdateGUIFrame::OnNavigationKey(wxNavigationKeyEvent& event)
 	}
 }
 
+/* return a tuple(avgJobTime[sec], totJobTime[min], estJobTime[min]) */
+static std::tuple<unsigned, unsigned, unsigned>
+calcJobTimingsAvgTotEst(Queue& jobs, size_t parallelJobCount, JobReport& jobReport, std::vector<unsigned>& jobTimings)
+{
+	unsigned avg = 0, tot = 0, est;
+	unsigned jobTime = jobReport.jobTime;
+
+	jobTimings.push_back(jobTime);
+	/* calculate an average/total */
+	for (auto& time : jobTimings) {
+		avg += time;
+		tot += time;
+	}
+	avg /= jobTimings.size();
+	/* Not the best solution since we dont know exactly
+	 * how much jobs are running in parallel.
+	 */
+	tot = (tot / parallelJobCount) / 60;
+	est = (avg * (jobs.Stacksize() + jobs.getBusyWorker())) / 60;
+
+	return std::make_tuple(avg, tot, est);
+}
+
 void UpdateGUIFrame::OnThread(wxCommandEvent& event)
 {
 	wxString wxs;
 	LogType tp = RTL_DEFAULT;
 	static size_t counter = 0;
-	bool printAllJobsDone = false;
+	static std::vector<unsigned> jobTimings;
+	unsigned avgJobTime = 0, totJobTime = 0, estTotalJobTime = 0;
+	bool allJobsDone = false;
+	JobReport *jobReport = nullptr;
 
 	/* some periodic informational output */
 	if ((++counter % 30) == 0) {
@@ -347,17 +375,20 @@ void UpdateGUIFrame::OnThread(wxCommandEvent& event)
 
 			switch (event.GetId()) {
 				case Job::eID_THREAD_JOB_DONE:
+					/* calculate job execution times (total/average/estimated) */
+					jobReport = dynamic_cast<JobReport *>(event.GetClientObject());
+					std::tie (avgJobTime, totJobTime, estTotalJobTime) = calcJobTimingsAvgTotEst(*jobs, threads.size(), *jobReport, jobTimings);
 					/* If more then one job was in the queue
-					 * inform the user about job completion.
+					 * inform the user about job completion,
+					 * otherwise reset completed job counter.
 					 */
 					if (jobs->Stacksize() == 0 && jobs->getBusyWorker() == 0) {
-						if (jobs->getTotalJobsDone() > 1) {
-							counter = 0;
-							printAllJobsDone = true;
-						}
+						if (jobs->getTotalJobsDone() > 1)
+							allJobsDone = true;
 						jobs->resetTotalJobsDone();
 					} else {
-						SetStatusText(wxs + wxString::Format(wxT(" (jobs remaining: %u)"), jobs->Stacksize() + jobs->getBusyWorker()));
+						SetStatusText(wxString::Format(wxT("Jobs remaining: %u, estimated remaining time: %umin"),
+						jobs->Stacksize() + jobs->getBusyWorker(), estTotalJobTime));
 					}
 					break;
 				case Job::eID_THREAD_JOB: SetStatusText(wxs); break;
@@ -367,18 +398,25 @@ void UpdateGUIFrame::OnThread(wxCommandEvent& event)
 			tLog(tp, wxs);
 			break;
 		case Job::eID_THREAD_EXIT:
+			/* should only be run once per thread and only if the app exits */
 			SetStatusText(wxString::Format(wxT("Thread [%i]: Stopped."), event.GetInt()));
 			threads.remove(event.GetInt());
 			if (threads.empty()) { this->OnExit(event); }
 			break;
 		case Job::eID_THREAD_STARTED:
+			/* should only be run once per thread and only if the app starts */
 			SetStatusText(wxString::Format(wxT("Thread [%i]: Ready."), event.GetInt()));
 			break;
 		default: event.Skip();
 	}
 
-	if (printAllJobsDone) {
-		SetStatusText(wxT("All jobs finished."));
-		tLog(RTL_GREEN, "All jobs finished.");
+	/* job queue is now empty and had more than one job */
+	if (allJobsDone) {
+		counter = 0;
+		/* we presume that threads.size() jobs ran at the same time */
+		wxs = wxString::Format(wxT("All jobs finished. Time consumption: %umin (average per device: %umin %usec)"), (unsigned)((float)totJobTime + 0.5f) /* roundup */, avgJobTime / 60, avgJobTime % 60);
+		SetStatusText(wxs);
+		tLog(RTL_GREEN, wxs);
+		jobTimings.clear();
 	}
 }

@@ -39,6 +39,13 @@ struct JobArgs
 	std::string password;
 };
 
+struct JobReport : public wxClientData
+{
+	JobReport(double jTime)
+	    : jobTime(jTime) {}
+	double jobTime;
+};
+
 struct Job
 {
 	enum JobEvents
@@ -76,6 +83,7 @@ public:
 	Job Pop();
 	/* report back to parent */
 	void Report(const Job::JobEvents& cmd, const wxString& sArg = wxEmptyString, int iArg = 0);
+	void ReportDone(const JobReport& jobReport, const wxString& sArg = wxEmptyString, int iArg = 0);
 	size_t Stacksize()
 	{
 		wxMutexLocker lock(m_MutexQueue);

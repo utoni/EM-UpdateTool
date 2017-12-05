@@ -28,6 +28,15 @@ void Queue::Report(const Job::JobEvents& cmd, const wxString& sArg, int iArg)
 	m_pParent->AddPendingEvent(evt);
 }
 
+void Queue::ReportDone(const JobReport& jobReport, const wxString& sArg, int iArg)
+{
+	wxCommandEvent evt(wxEVT_THREAD, Job::eID_THREAD_JOB_DONE);
+	evt.SetString(sArg);
+	evt.SetInt(iArg);
+	evt.SetClientObject(new JobReport(jobReport));
+	m_pParent->AddPendingEvent(evt);
+}
+
 wxThread::ExitCode WorkerThread::doWork()
 {
 	Sleep(1000);
@@ -41,11 +50,14 @@ wxThread::ExitCode WorkerThread::doWork()
 void WorkerThread::doJob()
 {
 	int rv;
+	std::time_t jobStart, jobEnd;
+	unsigned diffTime;
 	std::string err;
 	UpdateFactory uf;
 
 	Job job = m_pQueue->Pop();
 	m_pQueue->incBusyWorker();
+	jobStart = std::time(nullptr);
 
 	/* process the job which was started by the GUI */
 	switch(job.cmdEvent)
@@ -128,8 +140,12 @@ void WorkerThread::doJob()
 		default:
 			break;
 	}
-	m_pQueue->Report(Job::eID_THREAD_JOB_DONE,
-	    wxString::Format(wxT("Job #%d: finished."),
-	        job.cmdArgs.jobid), m_ID);
+
+	jobEnd = std::time(nullptr);
+	diffTime = std::difftime(jobEnd, jobStart);
+
+	m_pQueue->ReportDone(JobReport(diffTime),
+	    wxString::Format(wxT("Job #%d: finished. Time consumed: %umin %usec"),
+	        job.cmdArgs.jobid, (diffTime / 60), (diffTime % 60)), m_ID);
 	m_pQueue->decBusyWorker();
 }
