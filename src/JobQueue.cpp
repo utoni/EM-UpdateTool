@@ -48,7 +48,7 @@ void WorkerThread::doJob()
 	m_pQueue->incBusyWorker();
 
 	/* process the job which was started by the GUI */
-	switch(job.m_cmd)
+	switch(job.cmdEvent)
 	{
 		case Job::eID_THREAD_EXIT:
 			m_pQueue->decBusyWorker();
@@ -58,44 +58,44 @@ void WorkerThread::doJob()
 
 			m_pQueue->Report(Job::eID_THREAD_MSG,
 			    wxString::Format(wxT("Job #%d: Connecting to %s:%i"),
-			        job.m_Arg.jobid, job.m_Arg.hostname, job.m_Arg.port), m_ID);
-			uf.setDest(job.m_Arg.hostname, job.m_Arg.port);
-			uf.setPass(job.m_Arg.password);
+			        job.cmdArgs.jobid, job.cmdArgs.hostname, job.cmdArgs.port), m_ID);
+			uf.setDest(job.cmdArgs.hostname, job.cmdArgs.port);
+			uf.setPass(job.cmdArgs.password);
 
 			rv = uf.doAuth();
 			if (uf.getEmcVersion() != EMC_UNKNOWN) {
 				m_pQueue->Report(Job::eID_THREAD_MSG,
 				    wxString::Format(wxT("Job #%d: Current EnergyManager version: %s"),
-				        job.m_Arg.jobid, mapEmcVersion(uf.getEmcVersion())), m_ID);
+				        job.cmdArgs.jobid, mapEmcVersion(uf.getEmcVersion())), m_ID);
 			}
 
 			if (rv != UPDATE_OK) {
 				mapEmcError(rv, err);
 				m_pQueue->Report(Job::eID_THREAD_MSGERR,
 				    wxString::Format(wxT("Job #%d: %s."),
-				        job.m_Arg.jobid, err.c_str()), m_ID);
+				        job.cmdArgs.jobid, err.c_str()), m_ID);
 				break;
 			}
 
 			m_pQueue->Report(Job::eID_THREAD_MSG,
 			    wxString::Format(wxT("Job #%d: Loading file \"%s\""),
-			        job.m_Arg.jobid, job.m_Arg.update_file), m_ID);
-			uf.setUpdateFile(job.m_Arg.update_file.c_str());
+			        job.cmdArgs.jobid, job.cmdArgs.update_file), m_ID);
+			uf.setUpdateFile(job.cmdArgs.update_file.c_str());
 			rv = uf.loadUpdateFile();
 
 			if (uf.getFwVersion() == EMC_UNKNOWN) {
 				m_pQueue->Report(Job::eID_THREAD_MSG,
 				    wxString::Format(wxT("Job #%d: Invalid firmware update file"),
-				        job.m_Arg.jobid), m_ID);
+				        job.cmdArgs.jobid), m_ID);
 				break;
 			}
 			m_pQueue->Report(Job::eID_THREAD_MSG,
 			    wxString::Format(wxT("Job #%d: Firmware image version: %s"),
-			        job.m_Arg.jobid, mapEmcVersion(uf.getFwVersion())), m_ID);
+			        job.cmdArgs.jobid, mapEmcVersion(uf.getFwVersion())), m_ID);
 			if (!isEmcVersionLowerThen(uf.getEmcVersion(), uf.getFwVersion())) {
 				m_pQueue->Report(Job::eID_THREAD_MSGERR,
 					wxString::Format(wxT("Job #%d: Version mismatch (%s >= %s)"),
-						job.m_Arg.jobid, mapEmcVersion(uf.getEmcVersion()),
+						job.cmdArgs.jobid, mapEmcVersion(uf.getEmcVersion()),
 						mapEmcVersion(uf.getFwVersion())), m_ID);
 				break;
 			}
@@ -104,25 +104,25 @@ void WorkerThread::doJob()
 				mapEmcError(rv, err);
 				m_pQueue->Report(Job::eID_THREAD_MSGERR,
 				    wxString::Format(wxT("Job #%d: %s."),
-				        job.m_Arg.jobid, err.c_str()), m_ID);
+				        job.cmdArgs.jobid, err.c_str()), m_ID);
 				break;
 			}
 
 			m_pQueue->Report(Job::eID_THREAD_MSG,
 			    wxString::Format(wxT("Job #%d: Uploading file \"%s\""),
-			        job.m_Arg.jobid, job.m_Arg.update_file), m_ID);
+			        job.cmdArgs.jobid, job.cmdArgs.update_file), m_ID);
 			rv = uf.doUpdate();
 			mapEmcError(rv, err);
 			if (rv != UPDATE_OK) {
 				m_pQueue->Report(Job::eID_THREAD_MSGERR,
 				    wxString::Format(wxT("Job #%d: %s."),
-				        job.m_Arg.jobid, err.c_str()), m_ID);
+				        job.cmdArgs.jobid, err.c_str()), m_ID);
 				break;
 			}
 
 			m_pQueue->Report(Job::eID_THREAD_MSGOK,
 			    wxString::Format(wxT("Job #%d: %s."),
-			        job.m_Arg.jobid, err), m_ID);
+			        job.cmdArgs.jobid, err), m_ID);
 			break;
 		case Job::eID_THREAD_NULL:
 		default:
@@ -130,6 +130,6 @@ void WorkerThread::doJob()
 	}
 	m_pQueue->Report(Job::eID_THREAD_JOB_DONE,
 	    wxString::Format(wxT("Job #%d: finished."),
-	        job.m_Arg.jobid), m_ID);
+	        job.cmdArgs.jobid), m_ID);
 	m_pQueue->decBusyWorker();
 }

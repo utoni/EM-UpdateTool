@@ -12,9 +12,8 @@
 #include "UpdateFactory.hpp"
 
 
-class JobArgs
+struct JobArgs
 {
-public:
 	JobArgs()
 	    : jobid(-1), hostname(""), port(0),
 	      update_file(""), password("") {}
@@ -40,9 +39,8 @@ public:
 	std::string password;
 };
 
-class Job
+struct Job
 {
-public:
 	enum JobEvents
 	{
 		/* thread should exit or wants to exit */
@@ -61,11 +59,11 @@ public:
 		eID_THREAD_MSGERR
 	};
 
-	Job() : m_cmd(eID_THREAD_NULL) {}
-	Job(JobEvents cmd, JobArgs arg) : m_cmd(cmd), m_Arg(arg) {}
-	Job(JobEvents cmd, int jobid, UpdateFactory& uf) : m_cmd(cmd), m_Arg(jobid, uf) {}
-	JobEvents m_cmd;
-	JobArgs m_Arg;
+	Job() : cmdEvent(eID_THREAD_NULL) {}
+	Job(JobEvents cmd, JobArgs args) : cmdEvent(cmd), cmdArgs(args) {}
+	Job(JobEvents cmd, int jobid, UpdateFactory& uf) : cmdEvent(cmd), cmdArgs(jobid, uf) {}
+	JobEvents cmdEvent;
+	JobArgs cmdArgs;
 };
 
 class Queue
