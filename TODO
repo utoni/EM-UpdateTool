@@ -3,3 +3,5 @@
 - shrink Http.hpp (server is not needed afaik)
 - port Http.hpp to HTTP/1.1 (chunked transport)
 - Http.hpp uses Maps and Multimaps (What happens with multiple values per key e.g. multiple Set-Cookie's in one response?)
+
+- update python mock (was developed against 1.5* and 2.* versions)
