@@ -135,11 +135,6 @@ void UpdateFactory::setDest(const char *hostname, int port)
 	this->hostname = hostname;
 	this->port     = port;
 	http_client = new httplib::Client(hostname, port);
-	phpsessid   = "";
-	emc_serial  = "";
-	authenticated = false;
-	mapped_emc_version = EMC_UNKNOWN;
-	mapped_firmware_version = EMC_UNKNOWN;
 }
 
 void UpdateFactory::setDest(std::string& hostname, int port)
@@ -217,7 +212,7 @@ int UpdateFactory::doAuth()
 
 	if (!authenticated) {
 		std::ostringstream ostr;
-		ostr << "login=" << emc_serial << "&password=" << (passwd.c_str() ? passwd.c_str() : "");
+		ostr << "login=" << emc_serial << "&password=" << passwd;
 
 		genRequest(req, "/start.php", ostr.str().c_str());
 		if (!doPost(req, res2))
@@ -322,8 +317,11 @@ void UpdateFactory::cleanup()
 		delete http_client;
 		http_client = nullptr;
 	}
+	phpsessid   = "";
+	emc_serial  = "";
 	authenticated = false;
-	emc_serial = "";
+	mapped_emc_version = EMC_UNKNOWN;
+	mapped_firmware_version = EMC_UNKNOWN;
 }
 
 void UpdateFactory::genRequest(httplib::Request& req, const char *path,
