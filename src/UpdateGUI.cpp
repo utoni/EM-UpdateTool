@@ -198,30 +198,14 @@ void UpdateGUIFrame::OnExit(wxCommandEvent& event)
 #ifndef PACKAGE_VERSION
 #define PACKAGE_VERSION "unknown"
 #endif
-#ifndef PACKAGE_URL
-#define PACKAGE_URL "https://some_download_website.tld"
-#endif
 
 void UpdateGUIFrame::OnAbout(wxCommandEvent& event)
 {
 	wxAboutDialogInfo aboutInfo;
 	aboutInfo.SetName(PACKAGE_NAME);
 	aboutInfo.SetVersion(PACKAGE_VERSION);
-	aboutInfo.SetDescription("A simple firmware update tool for Energy Manager firmware.");
-	aboutInfo.SetCopyright("(C) 2017");
-	aboutInfo.SetWebSite(PACKAGE_URL);
-	aboutInfo.AddDeveloper("Toni Uhlig");
-	aboutInfo.SetLicense(wxString(
-		"TQ-Systems Software License Agreement Version 1.0.1\n\n"
-		"wxWidgets: wxWindows Library Licence, Version 3.1\n"
-			"https://github.com/wxWidgets/wxWidgets\n\n"
-		"Fast C++ CSV Parser: BSD-3\n"
-			"https://github.com/ben-strasser/fast-cpp-csv-parser\n\n"
-		"cpp-httplib: Boost Software License - Version 1.0 - August 17th, 2003\n"
-			"https://github.com/yhirose/cpp-httplib\n\n"
-		"json11: MIT\n"
-			"https://github.com/dropbox/json11\n"
-	));
+	aboutInfo.SetDescription("A simple firmware update tool for Energy Manager / Datamanager firmware.");
+	aboutInfo.SetCopyright("(C) TQ-Systems GmbH, Toni Uhlig 2017");
 	wxAboutBox(aboutInfo, this);
 }
 
