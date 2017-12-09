@@ -16,9 +16,13 @@
 
 enum LogType { RTL_DEFAULT, RTL_GREEN, RTL_RED };
 enum {
+	/* UpdateGUIFrame */
 	wxID_EDITOR = wxID_HIGHEST + 1,
 	wxID_IP, wxID_PW, wxID_IMG,
-	wxID_UPDATEFILE, wxID_IMPORTCSV, wxID_DOUPDATE
+	wxID_UPDATEFILE, wxID_IMPORTCSV, wxID_DOUPDATE,
+	wxID_LICENSE,
+	/* UpdateGUILicense */
+	wxID_ACCEPT, wxID_DECLINE
 };
 
 class UpdateGUI : public wxApp
@@ -43,6 +47,7 @@ private:
 	void OnClose(wxCloseEvent& event);
 	void OnExit(wxCommandEvent& event);
 	void OnAbout(wxCommandEvent& event);
+	void OnLicense(wxCommandEvent& event);
 	void OnEditor(wxCommandEvent& event);
 	void OnUpdateFile(wxCommandEvent& event);
 	void OnImportCSV(wxCommandEvent& event);
@@ -62,6 +67,28 @@ private:
 	Queue *jobs;
 	/** Thread list IDs */
 	std::list<int> threads;
+};
+
+bool isLicenseAlreadyAccepted();
+
+class UpdateGUILicense: public wxFrame
+{
+public:
+	UpdateGUILicense(wxWindow *parent, const wxString& title,
+	                 const wxPoint& pos, const wxSize& size,
+	                 bool showButtons = true);
+	~UpdateGUILicense() {}
+private:
+	void OnClose(wxCloseEvent& event);
+	void OnAccept(wxCommandEvent& event);
+	void OnDecline(wxCommandEvent& event);
+
+	wxDECLARE_EVENT_TABLE();
+
+	wxBoxSizer *mainVSizer;
+	wxStaticBoxSizer *licBox, *btnBox;
+	wxButton *acceptButton, *declineButton;
+	wxTextCtrl *licText;
 };
 
 #endif

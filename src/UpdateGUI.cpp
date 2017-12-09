@@ -3,12 +3,14 @@
 #endif
 #include "UpdateGUI.hpp"
 #include "JobQueue.hpp"
+#include "license.h"
 
 #include <iostream>
 #include <iomanip>
 #include <tuple>
 #include <chrono>
 #include <ctime>
+
 #include <wx/aboutdlg.h>
 #include <wx/msgdlg.h>
 
@@ -18,6 +20,7 @@ wxBEGIN_EVENT_TABLE(UpdateGUIFrame, wxFrame)
 
 	EVT_MENU(wxID_EXIT,       UpdateGUIFrame::OnExit)
 	EVT_MENU(wxID_ABOUT,      UpdateGUIFrame::OnAbout)
+	EVT_MENU(wxID_LICENSE,    UpdateGUIFrame::OnLicense)
 	EVT_MENU(wxID_EDITOR,     UpdateGUIFrame::OnEditor)
 	EVT_MENU(wxID_UPDATEFILE, UpdateGUIFrame::OnUpdateFile)
 	EVT_MENU(wxID_IMPORTCSV,  UpdateGUIFrame::OnImportCSV)
@@ -32,12 +35,25 @@ wxBEGIN_EVENT_TABLE(UpdateGUIFrame, wxFrame)
 	EVT_COMMAND(wxID_ANY, wxEVT_THREAD, UpdateGUIFrame::OnThread)
 wxEND_EVENT_TABLE()
 
+wxBEGIN_EVENT_TABLE(UpdateGUILicense, wxFrame)
+	EVT_CLOSE(UpdateGUILicense::OnClose)
+
+	EVT_BUTTON(wxID_ACCEPT,   UpdateGUILicense::OnAccept)
+	EVT_BUTTON(wxID_DECLINE,  UpdateGUILicense::OnDecline)
+wxEND_EVENT_TABLE()
+
 
 bool UpdateGUI::OnInit()
 {
-	UpdateGUIFrame *frame = new UpdateGUIFrame("UpdateTool",
-	                                           wxPoint(50, 50), wxSize(450, 340));
-	frame->Show(true);
+	if (isLicenseAlreadyAccepted()) {
+		UpdateGUIFrame *frame = new UpdateGUIFrame("UpdateTool",
+		                                wxPoint(50, 50), wxSize(450, 340));
+		frame->Show(true);
+	} else {
+		UpdateGUILicense *frame = new UpdateGUILicense(nullptr, "UpdateTool - LICENSE",
+		                                wxPoint(50, 50), wxSize(450, 340), true);
+		frame->Show(true);
+	}
 	return true;
 }
 
@@ -69,6 +85,9 @@ UpdateGUIFrame::UpdateGUIFrame(const wxString& title, const wxPoint& pos, const 
 
 	wxMenu *menuHelp = new wxMenu;
 	menuHelp->Append(wxID_ABOUT);
+	menuHelp->Append(wxID_LICENSE,
+	                 "&License ...\tCtrl-L",
+	                 "Show the corresponding Software License");
 
 	wxMenuBar *menuBar = new wxMenuBar;
 	menuBar->Append(menuFile, "&File");
@@ -108,6 +127,9 @@ UpdateGUIFrame::UpdateGUIFrame(const wxString& title, const wxPoint& pos, const 
 	    this, wxID_EDITOR, wxEmptyString, wxDefaultPosition,
 	    wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH2
 	);
+#ifdef WIN32
+	logText->HideNativeCaret();
+#endif
 	logBox->Add(logText, 1, wxEXPAND|wxALL, 5);
 
 	mainVSizer->Add(ipBox,  0, wxEXPAND|wxALL|wxTOP, 5);
@@ -179,11 +201,6 @@ void UpdateGUIFrame::OnClose(wxCloseEvent& event)
 	}
 	if (!threads.empty()) return;
 
-	for (auto *p : {ipEntry,pwEntry,imgEntry,logText}) { p->Destroy(); }
-	imgButton->Destroy();
-	subButton->Destroy();
-	for (auto *p : {ipBox,pwBox,imgBox,subBox,logBox}) { p->Clear(); }
-	mainVSizer->Clear();
 	Destroy();
 }
 
@@ -207,6 +224,14 @@ void UpdateGUIFrame::OnAbout(wxCommandEvent& event)
 	aboutInfo.SetDescription("A simple firmware update tool for Energy Manager / Datamanager firmware.");
 	aboutInfo.SetCopyright("(C) TQ-Systems GmbH, Toni Uhlig 2017");
 	wxAboutBox(aboutInfo, this);
+}
+
+void UpdateGUIFrame::OnLicense(wxCommandEvent& event)
+{
+	UpdateGUILicense *frame = new UpdateGUILicense(this, "UpdateTool - LICENSE",
+	                                               wxPoint(50, 50), wxSize(450, 340),
+	                                               false);
+	frame->Show(true);
 }
 
 void UpdateGUIFrame::OnEditor(wxCommandEvent& event)
@@ -403,4 +428,121 @@ void UpdateGUIFrame::OnThread(wxCommandEvent& event)
 		tLog(RTL_GREEN, wxs);
 		jobTimings.clear();
 	}
+}
+
+#define LICENSE_FILENAME "utool_license_accepted"
+static const std::wstring licenses(ALL_LICENSES);
+
+#ifdef WIN32
+static DWORD buildLicensePathWin(TCHAR *pathBuf, DWORD pathLen)
+{
+	DWORD len;
+
+	memset(pathBuf, 0, sizeof(TCHAR) * pathLen);
+	len = GetTempPath(pathLen, pathBuf);
+	if (len > 0) {
+		wcsncat(pathBuf, _T(LICENSE_FILENAME), pathLen - len);
+	}
+	return len;
+}
+#endif
+
+bool isLicenseAlreadyAccepted()
+{
+#ifdef WIN32
+	TCHAR path[MAX_PATH];
+
+	if (buildLicensePathWin(&path[0], MAX_PATH) > 0) {
+		if (_waccess(path, R_OK) == 0) {
+			std::wcerr << std::wstring(&path[0])
+			           << ": License already accepted!" << std::endl;
+			return true;
+		} else {
+			std::wcerr << std::wstring(&path[0])
+			           << ": License NOT accepted!" << std::endl;
+		}
+	}
+	return false;
+#else
+	return false;
+#endif
+}
+
+static void setLicenseAccepted()
+{
+#ifdef WIN32
+	FILE *lf;
+	TCHAR path[MAX_PATH];
+
+	if (buildLicensePathWin(&path[0], MAX_PATH) > 0) {
+		lf = _wfopen(path, _T("w+t"));
+		if (lf)
+			fclose(lf);
+	}
+#endif
+}
+
+UpdateGUILicense::UpdateGUILicense(wxWindow *parent, const wxString& title,
+                                   const wxPoint& pos, const wxSize& size,
+                                   bool showButtons)
+	      : wxFrame(parent, wxID_ANY, title, pos, size)
+{
+	SetBackgroundColour(wxColour(220, 220, 220));
+#ifdef WIN32
+	SetIcon(wxICON(APPICON));
+#endif
+	mainVSizer = new wxBoxSizer(wxVERTICAL);
+	licBox = new wxStaticBoxSizer(wxHORIZONTAL, this, "License");
+	if (showButtons)
+		btnBox = new wxStaticBoxSizer(wxHORIZONTAL, this);
+
+	licText       = new wxTextCtrl(this, -1, wxEmptyString, wxDefaultPosition,
+	                               wxDefaultSize,
+	                               wxEXPAND | wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH2);
+	if (showButtons) {
+		acceptButton  = new wxButton(this, wxID_ACCEPT, wxT("Accept"));
+		declineButton = new wxButton(this, wxID_DECLINE, wxT("Decline"));
+	}
+
+	licBox->Add(licText, 1, wxEXPAND|wxALL, 5);
+	if (showButtons) {
+		btnBox->AddStretchSpacer();
+		btnBox->Add(acceptButton, 0, wxALL, 5);
+		btnBox->Add(declineButton, 0, wxALL, 5);
+		btnBox->AddStretchSpacer();
+	}
+
+	mainVSizer->Add(licBox, 1, wxEXPAND|wxALL, 5);
+	if (showButtons)
+		mainVSizer->Add(btnBox, 0, wxEXPAND|wxALL|wxBOTTOM, 5);
+
+	SetSizerAndFit(mainVSizer);
+	SetInitialSize(wxSize(600, 800));
+	Centre();
+
+	licText->AppendText(licenses);
+	licText->ShowPosition(0);
+	licText->SetSelection(0, 0);
+#ifdef WIN32
+	licText->HideNativeCaret();
+#endif
+}
+
+void UpdateGUILicense::OnClose(wxCloseEvent& event)
+{
+	Destroy();
+}
+
+void UpdateGUILicense::OnAccept(wxCommandEvent& event)
+{
+	setLicenseAccepted();
+	UpdateGUIFrame *frame = new UpdateGUIFrame("UpdateTool",
+	                                           wxPoint(50, 50), wxSize(450, 340));
+	frame->Show(true);
+	Destroy();
+}
+
+void UpdateGUILicense::OnDecline(wxCommandEvent& event)
+{
+	_exit(0);
 }
