@@ -27,10 +27,23 @@ AC_TYPE_SIZE_T
 AC_CHECK_HEADER_STDBOOL
 AC_FUNC_VPRINTF
 AC_FUNC_STAT
+
+dnl Some C includes required by third-party modules.
+AC_CHECK_HEADERS([pthread.h unistd.h signal.h assert.h sys/stat.h],,
+	[AC_MSG_ERROR([Missing essential std headers.])])
+
+dnl Some std functions which are required by libgcc/libstdc.
 AC_CHECK_FUNCS([malloc calloc realloc free memcmp memchr memcpy memmove memset putc putwc raise rand signal sprintf strchr strcmp strcoll strcpy strerror strftime strlen strncmp strncpy strpbrk strspn strstr strtol strtoul tolower toupper towlower towupper ungetc ungetwc vfprintf wcschr wcscmp wcscoll wcscpy wcspbrk wcsspn wcsstr wcstol wcstoul fopen fgets fprintf fputs fread fwrite getc fputc isalnum isalpha isupper time mktime gmtime close fclose feof exit],,
 	[AC_MSG_ERROR([Missing essential std functions.])])
 AX_CXX_COMPILE_STDCXX_11(, [mandatory])
 
+dnl C++ header checks, not necessary because we are checking for the CXX11 standart.
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADERS([cstdio iostream iomanip fstream sstream memory regex tuple chrono ctime vector string cstring algorithm utility map list thread mutex exception],,
+	[AC_MSG_ERROR([Missing essential C++ functions.])])
+AC_LANG_POP([C++])
+
+dnl `--disable-gui`
 AC_ARG_ENABLE([gui],
 	[AS_HELP_STRING([--disable-gui], [Build the UpdateTool with a wxWidgets based GUI instead of a simple CLI (default enabled).])],,[ut_buildgui=yes])
 ut_buildgui=$(echo ${ut_buildgui})
@@ -40,6 +53,7 @@ case ${ut_buildgui} in
 	*) AC_MSG_ERROR([unknown option '${ut_buildgui}' for --enable-gui]) ;;
 esac
 
+dnl `--enable-host-wxwidgets`
 AC_ARG_ENABLE([host-wxwidgets],
 	[AS_HELP_STRING([--enable-host-wxwidgets], [Use the system wxWidgets library instead of our own shipped in ./wxWidgets (not recommended).])],,
 	[enable_host_wxwidgets=no])
@@ -59,6 +73,7 @@ else
 	AC_MSG_RESULT([disabled])
 fi
 
+dnl Build the host triplet which we use to check for an existing wxWidgets build.
 if test x"${enable_host_wxwidgets}" != x"yes"; then
 	if test "${cross_compiling}" != "no"; then
 		utool_wxdir="wxWidgets-${host_alias}/"
@@ -82,6 +97,9 @@ PROGRAM_EXT=
 windres=
 case "${host}" in
 	*-*-cygwin* | *-*-mingw32* )
+		dnl Some Windows includes required by third-party modules.
+		AC_CHECK_HEADERS([winsock2.h windows.h ws2tcpip.h],,
+			[AC_MSG_ERROR([Missing essential Windows std headers.])])
 		AC_CHECK_TOOL(WINDRES, [windres])
 		PROGRAM_EXT=".exe"
 		windres="${WINDRES:-}"
@@ -91,6 +109,7 @@ case "${host}" in
 	;;
 esac
 
+dnl wxWidgets checks
 if test x"${ut_buildgui}" = x"yes"; then
 	if test x"${ut_use_msw}" = x"yes" -a x"${enable_host_wxwidgets}" = x"yes"; then
 		AC_MSG_ERROR([Building UpdateTool for Windows based platforms is not supported with --enable-host-wxwidgets])
@@ -106,6 +125,7 @@ if test x"${ut_buildgui}" = x"yes"; then
 	AC_MSG_RESULT([yes])
 fi
 
+dnl set final ut (UpdateTool) CFLAGS
 ut_cflags="${ut_cflags} -Wall -Wno-deprecated-declarations"
 if `echo $CXXFLAGS $CFLAGS | grep " -O" >/dev/null`; then
 	AC_MSG_WARN([CXXFLAGS/CFLAGS already contains -O flag; ignoring -Os])
@@ -113,6 +133,7 @@ else
 	ut_cflags="${ut_cflags} -Os"
 fi
 
+dnl set automake conf vars
 AM_CONDITIONAL([UT_BUILDGUI], [test x"${ut_buildgui}" = xyes])
 AM_CONDITIONAL([HAVE_WINDRES], [test x"${windres}" != x])
 AC_SUBST([UT_CFLAGS], [${ut_cflags}])
@@ -121,9 +142,11 @@ AC_SUBST([WX_CFLAGS], [${wx_cflags}])
 AC_SUBST([WX_LIBS],   [${wx_libs}])
 AC_SUBST([WINDRES],   [${windres}])
 
+dnl output config headers
 AC_CONFIG_HEADERS([src/config.h:src/config.h.in])
 AC_OUTPUT
 
+dnl print configuration to stdout
 cat << EOF
 
 UpdateTool was configured with:
