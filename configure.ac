@@ -74,7 +74,7 @@ else
 fi
 
 dnl Build the host triplet which we use to check for an existing wxWidgets build.
-if test x"${enable_host_wxwidgets}" != x"yes"; then
+if test x"${enable_host_wxwidgets}" != x"yes" -a x"${ut_buildgui}" = xyes; then
 	if test "${cross_compiling}" != "no"; then
 		utool_wxdir="wxWidgets-${host_alias}/"
 	else
@@ -82,7 +82,7 @@ if test x"${enable_host_wxwidgets}" != x"yes"; then
 	fi
 	AC_MSG_CHECKING([for wxWidgets])
 	if ! test -d "${utool_wxdir}lib"; then
-		AC_MSG_ERROR([Missing wxWidgets builddir ${utool_wxdir}: Please run \`./build_wxwidgets.sh ${host_alias:-host}\` first.])
+		AC_MSG_ERROR([Missing wxWidgets builddir ${utool_wxdir}: Please run \`./build_wxwidgets.sh ${host_alias:-host}\` first or \`./configure --disable-gui\` or \`./configure --enable-host-wxwidgets\`.])
 	fi
 	AC_MSG_RESULT([yes])
 else

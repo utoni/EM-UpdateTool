@@ -95,7 +95,7 @@ void mapEmcError(int error, std::string& out)
 {
 	try {
 		out = error_map.at(error);
-	} catch (std::out_of_range) {
+	} catch (const std::out_of_range &e) {
 		out = "Unknown";
 	}
 }
