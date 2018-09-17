@@ -10,7 +10,9 @@ else
 	HOSTARG="--host=${HOSTT}"
 fi
 
+SRCDIR="$(dirname $0)"
 WDIR="wxWidgets"
+cd ${SRCDIR}
 git submodule init
 git submodule update
 cd ${WDIR}
@@ -21,7 +23,7 @@ mkdir -p "${WDIR}-${HOSTT:-host}"
 cd "${WDIR}-${HOSTT:-host}"
 
 # Verify: Do we need '-Wl,-gc-sections' since we are creating static lib archives?
-CXXFLAGS="-ffunction-sections -fdata-sections -Os -Wno-deprecated-declarations -Wno-misleading-indentation -Wno-undef"
+CXXFLAGS="-ffunction-sections -fdata-sections -Os -Wno-deprecated-declarations -Wno-misleading-indentation -Wno-undef -Wno-parentheses"
 ../${WDIR}/configure --without-expat --disable-compat28 --disable-compat30 \
 	--disable-richtooltip --disable-richmsgdlg --disable-richtext \
 	--without-libpng --without-libjpeg --without-regex \
@@ -43,7 +45,8 @@ CXXFLAGS="-ffunction-sections -fdata-sections -Os -Wno-deprecated-declarations -
 	--disable-hotkey --disable-busyinfo --disable-spline \
 	--disable-toolbook \
 	CXXFLAGS="${CXXFLAGS}"
-make -j${BUILDJOBS:-4} BUILD=release
+CPUCORES=$(cat /proc/cpuinfo | grep -E '^processor' | wc -l)
+make -j${BUILDJOBS:-${CPUCORES}} BUILD=release
 
 # fix static lib path for cross compile targets
 for lib in lib/*-${HOSTT:-host}.a; do
