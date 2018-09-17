@@ -28,6 +28,7 @@ int main(int argc, char* argv[])
 /* Command Line Interface (CLI) for UNIX/WIN */
 int main(int argc, char *argv[])
 {
+	size_t totalUpdates = 0, successUpdates = 0;
 	int rv;
 	std::vector<UpdateFactory*> uf;
 	std::string errstr, hostPorts;
@@ -56,6 +57,10 @@ int main(int argc, char *argv[])
 	}
 
 	for (auto *u : uf) {
+		totalUpdates++;
+		std::cerr << "Connecting to '" << u->getHostname() << ":"
+		          << u->getPort() << "' with password '"
+		          << u->getPassword() << "'" << std::endl;
 		rv = u->doAuth();
 		mapEmcError(rv, errstr);
 		if (rv == UPDATE_OK) {
@@ -71,6 +76,7 @@ int main(int argc, char *argv[])
 				std::cerr << "uploading file " << u->getUpdateFile() << std::endl;
 				rv = u->doUpdate();
 				if (rv == UPDATE_OK) {
+					successUpdates++;
 					std::cerr << "Update succeeded!" << std::endl;
 				} else {
 					mapEmcError(rv, errstr);
@@ -86,6 +92,13 @@ int main(int argc, char *argv[])
 	for (auto *u : uf) {
 		delete u;
 	}
+
+	std::cout << "-----------------------" << std::endl
+	          << "updates: " << totalUpdates << std::endl
+	          << "success: " << successUpdates << std::endl
+	          << "failed.: " << (totalUpdates - successUpdates) << std::endl
+	          << std::endl;
+
 	return 0;
 }
 
