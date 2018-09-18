@@ -58,6 +58,8 @@ def post_setup_php():
 
 
 if __name__ == '__main__':
+    if len(argv) == 1:
+        print 'usage: %s [PASSWORD] [HOST] [PORT]\n' % (argv[0])
     try:
         PASSWORD = argv[1]
     except IndexError:

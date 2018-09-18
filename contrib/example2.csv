@@ -4,3 +4,4 @@ hostname,port,password,unused_column1,unused_column2,unused_columnN
 0.0.0.0,80,1234,unused1,unused2,unusedN
 nonexistant.tld,80,,unused1,unused2,unusedN
 localhost,80,1234,unused,unused,unused
+localhost,8000,1234,,,
