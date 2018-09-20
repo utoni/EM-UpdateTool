@@ -100,9 +100,11 @@ void mapEmcError(int error, std::string& out)
 	}
 }
 
-static inline void dump_request(httplib::Request& req)
+static inline void dump_request(httplib::Request& req, UpdateFactory *uf)
 {
 	std::cerr << "http-cli: " << req.method << " "
+	          << "http://" << (uf ? uf->getHostname() : "[null]")
+	          << ":" << (uf ? uf->getPort() : -1)
 	          << req.path
 	          << " with MIME " << req.get_header_value("Content-Type")
 	          << " and SIZE " << req.body.length()
@@ -354,7 +356,7 @@ void UpdateFactory::genRequest(httplib::Request& req, const char *path,
 bool UpdateFactory::doGet(httplib::Request& req, httplib::Response& res)
 {
 	req.method = "GET";
-	dump_request(req);
+	dump_request(req, this);
 
 	return http_client->send(req, res);
 }
@@ -362,7 +364,7 @@ bool UpdateFactory::doGet(httplib::Request& req, httplib::Response& res)
 bool UpdateFactory::doPost(httplib::Request& req, httplib::Response& res)
 {
 	req.method = "POST";
-	dump_request(req);
+	dump_request(req, this);
 
 	if (!http_client)
 		return false;
