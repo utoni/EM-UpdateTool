@@ -1,10 +1,13 @@
 #!/bin/bash
 
-test -f ./Makefile && make distclean
+set -x
+set -e
 
-aclocal
-autoheader
-automake --force-missing --add-missing
-autoconf
+if ! autoreconf -i; then
+	aclocal
+	autoheader
+	automake --force-missing --add-missing
+	autoconf
+fi
 
-./configure $@ && make -j${BUILDJOBS:-4} all
+./configure $@ && make clean && make -j${BUILDJOBS:-4} all
