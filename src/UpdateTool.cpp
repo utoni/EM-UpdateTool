@@ -1,7 +1,50 @@
 #include <cstdio>
 #include <iostream>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "UpdateFactory.hpp"
+
+
+extern void print_build_details(void)
+{
+	std::cout << "[BUILD_DETAILS]" << std::endl
+
+#ifdef UT_GITHASH
+	<< "git-hash..: " << UT_GITHASH << std::endl
+#endif
+
+#ifdef UT_BUILDGUI
+	<< "with-gui..: " << UT_BUILDGUI << std::endl
+#endif
+
+#ifdef UT_BUILDWIN
+	<< "windows...: " << UT_BUILDWIN << std::endl
+#endif
+
+#ifdef UT_CFLAGS
+	<< "ut-cflags.: " << UT_CFLAGS << std::endl
+#endif
+
+#ifdef UT_LIBS
+	<< "ut-libs...: " << UT_LIBS << std::endl
+#endif
+
+#ifdef WX_CFLAGS
+	<< "wx-cflags.: " << WX_CFLAGS << std::endl
+#endif
+
+#ifdef WX_LIBS
+	<< "wx-libs...: " << WX_LIBS << std::endl
+#endif
+
+#ifdef WX_VERSION
+	<< "wx-version: " << WX_VERSION << std::endl
+#endif
+
+	<< std::endl;
+}
 
 #ifdef USE_GUI
 #include "UpdateGUI.hpp"
@@ -16,6 +59,8 @@ int wmain(int argc, wchar_t* argv[])
 int main(int argc, char* argv[])
 #endif
 {
+	print_build_details();
+
 	wxEntryStart(argc, argv);
 	wxTheApp->CallOnInit();
 	wxTheApp->OnRun();
@@ -32,6 +77,8 @@ int main(int argc, char *argv[])
 	int rv;
 	std::vector<UpdateFactory*> uf;
 	std::string errstr, hostPorts;
+
+	print_build_details();
 
 	if (argc == 0)
 		return 1;
@@ -108,6 +155,8 @@ int wmain(int argc, wchar_t* wargv[])
 {
 	size_t len;
 	static char **argv = new char*[argc];
+
+	print_build_details();
 
 	/* convert wide character argvector to ASCII, dirty .. */
 	for (int i = 0; i < argc; ++i) {

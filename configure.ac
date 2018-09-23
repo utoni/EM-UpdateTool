@@ -20,6 +20,10 @@ else
 	HOST_SUFFIX=
 fi
 
+if command -v git >/dev/null; then
+	ut_githash="$(command git rev-parse HEAD)"
+fi
+
 AM_SILENT_RULES([yes])
 AM_INIT_AUTOMAKE
 AC_PROG_CXX
@@ -144,6 +148,14 @@ AC_SUBST([UT_LIBS],   [${ut_libs}])
 AC_SUBST([WX_CFLAGS], [${wx_cflags}])
 AC_SUBST([WX_LIBS],   [${wx_libs}])
 AC_SUBST([WINDRES],   [${windres}])
+AC_DEFINE_UNQUOTED([UT_GITHASH], ["${ut_githash:-unknown}"],[UpdateTool GIT SHA-1 hash])
+AC_DEFINE_UNQUOTED([UT_BUILDGUI],["${ut_buildgui:-disabled}"],[UpdateTool build with GUI])
+AC_DEFINE_UNQUOTED([UT_BUILDWIN],["${ut_use_msw:-disabled}"],[UpdateTool build for Windows])
+AC_DEFINE_UNQUOTED([UT_CFLAGS],  ["${ut_cflags}"],[UpdateTool CFLAGS as string])
+AC_DEFINE_UNQUOTED([UT_LIBS],    ["${ut_libs}"],  [UpdateTool LIBS as string])
+AC_DEFINE_UNQUOTED([WX_CFLAGS],  ["${wx_cflags}"],[UpdateTool wxWidgets CFLAGS as string])
+AC_DEFINE_UNQUOTED([WX_LIBS],    ["${wx_libs}"],  [UpdateTool wxWidgets LIBS as string])
+AC_DEFINE_UNQUOTED([WX_VERSION], ["${wx_version:-unknown}"],[UpdateTool wxWidgets version])
 
 dnl output config headers
 AC_CONFIG_HEADERS([src/config.h:src/config.h.in])

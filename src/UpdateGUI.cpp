@@ -42,9 +42,13 @@ wxBEGIN_EVENT_TABLE(UpdateGUILicense, wxFrame)
 	EVT_BUTTON(wxID_DECLINE,  UpdateGUILicense::OnDecline)
 wxEND_EVENT_TABLE()
 
+extern void print_build_details(void);
+
 
 bool UpdateGUI::OnInit()
 {
+	print_build_details();
+
 	if (isLicenseAlreadyAccepted()) {
 		UpdateGUIFrame *frame = new UpdateGUIFrame("UpdateTool",
 		                                wxPoint(50, 50), wxSize(450, 340));
