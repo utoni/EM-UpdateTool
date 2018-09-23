@@ -55,6 +55,10 @@ private:
 	void OnNavigationKey(wxNavigationKeyEvent& event);
 	void OnThread(wxCommandEvent& event);
 
+	/* overall job stats */
+	size_t getTotalUpdates() { return this->totalUpdates; }
+	size_t getSuccessUpdates() { return this->successUpdates; }
+
 	wxDECLARE_EVENT_TABLE();
 
 	/* GUI elements */
@@ -67,6 +71,9 @@ private:
 	Queue *jobs;
 	/** Thread list IDs */
 	std::list<int> threads;
+
+	/* stats */
+	size_t totalUpdates = 0, successUpdates = 0;
 };
 
 bool isLicenseAlreadyAccepted();

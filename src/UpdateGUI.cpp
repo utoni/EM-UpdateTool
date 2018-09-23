@@ -283,6 +283,7 @@ void UpdateGUIFrame::OnImportCSV(wxCommandEvent& event)
 	/* add all csv jobs to the job queue */
 	jobid = rand();
 	for (auto *u : uf) {
+		totalUpdates++;
 		jobs->AddJob(Job(Job::eID_THREAD_JOB, JobArgs(jobid, *u)));
 		jobid++;
 		delete u;
@@ -314,6 +315,7 @@ void UpdateGUIFrame::OnUpdate(wxCommandEvent& event)
 	/* add all jobs to the job queue */
 	int jobid = rand();
 	for (auto *u : uf) {
+		totalUpdates++;
 		std::ostringstream log;
 		log << "Update started ... (Job: #" << jobid << ")";
 		tLog(RTL_DEFAULT, log.str().c_str());
@@ -374,37 +376,29 @@ void UpdateGUIFrame::OnThread(wxCommandEvent& event)
 	}
 
 	/* process the wx event itself */
+	wxs = wxString::Format(wxT("Thread [%i]: %s"), event.GetInt(), event.GetString().c_str());
 	switch (event.GetId()) {
-		case Job::eID_THREAD_JOB:
+		/* case Job::eID_THREAD_JOB: SetStatusText(wxs); break; */
+		case Job::eID_THREAD_MSG: break;
+		case Job::eID_THREAD_MSGOK: SetStatusText(wxs); tp = RTL_GREEN; break;
+		case Job::eID_THREAD_MSGERR: successUpdates--; tp = RTL_RED; break;
 		case Job::eID_THREAD_JOB_DONE:
-		case Job::eID_THREAD_MSG:
-		case Job::eID_THREAD_MSGOK:
-		case Job::eID_THREAD_MSGERR:
-			wxs = wxString::Format(wxT("Thread [%i]: %s"), event.GetInt(), event.GetString().c_str());
-
-			switch (event.GetId()) {
-				case Job::eID_THREAD_JOB_DONE:
-					/* calculate job execution times (total/average/estimated) */
-					jobReport = dynamic_cast<JobReport *>(event.GetClientObject());
-					std::tie (avgJobTime, totJobTime, estTotalJobTime) = calcJobTimingsAvgTotEst(*jobs, threads.size(), *jobReport, jobTimings);
-					/* If more then one job was in the queue
-					 * inform the user about job completion,
-					 * otherwise reset completed job counter.
-					 */
-					if (jobs->Stacksize() == 0 && jobs->getBusyWorker() == 0) {
-						if (jobs->getTotalJobsDone() > 1)
-							allJobsDone = true;
-						jobs->resetTotalJobsDone();
-					} else {
-						SetStatusText(wxString::Format(wxT("Jobs remaining: %u, estimated remaining time: %umin"),
-						jobs->Stacksize() + jobs->getBusyWorker(), estTotalJobTime));
-					}
-					break;
-				case Job::eID_THREAD_JOB: SetStatusText(wxs); break;
-				case Job::eID_THREAD_MSGOK: SetStatusText(wxs); tp = RTL_GREEN; break;
-				case Job::eID_THREAD_MSGERR: tp = RTL_RED; break;
+			successUpdates++;
+			/* calculate job execution times (total/average/estimated) */
+			jobReport = dynamic_cast<JobReport *>(event.GetClientObject());
+			std::tie (avgJobTime, totJobTime, estTotalJobTime) = calcJobTimingsAvgTotEst(*jobs, threads.size(), *jobReport, jobTimings);
+			/* If more then one job was in the queue
+			 * inform the user about job completion,
+			 * otherwise reset completed job counter.
+			 */
+			if (jobs->Stacksize() == 0 && jobs->getBusyWorker() == 0) {
+				if (jobs->getTotalJobsDone() > 1)
+					allJobsDone = true;
+				jobs->resetTotalJobsDone();
+			} else {
+				SetStatusText(wxString::Format(wxT("Jobs remaining: %u, estimated remaining time: %umin"),
+				jobs->Stacksize() + jobs->getBusyWorker(), estTotalJobTime));
 			}
-			tLog(tp, wxs);
 			break;
 		case Job::eID_THREAD_EXIT:
 			/* should only be run once per thread and only if the app exits */
@@ -419,14 +413,40 @@ void UpdateGUIFrame::OnThread(wxCommandEvent& event)
 		default: event.Skip();
 	}
 
+	/* output the wxString in the status log */
+	switch (event.GetId()) {
+		case Job::eID_THREAD_JOB:
+		case Job::eID_THREAD_JOB_DONE:
+		case Job::eID_THREAD_MSG:
+		case Job::eID_THREAD_MSGOK:
+		case Job::eID_THREAD_MSGERR:
+			tLog(tp, wxs);
+			break;
+		default:
+			break;
+	}
+
 	/* job queue is now empty and had more than one job */
 	if (allJobsDone) {
 		counter = 0;
 		/* we presume that threads.size() jobs ran at the same time */
-		wxs = wxString::Format(wxT("All jobs finished. Time consumption: %umin (average per device: %umin %usec)"), (unsigned)((float)totJobTime + 0.5f) /* roundup */, avgJobTime / 60, avgJobTime % 60);
+		wxs = wxString::Format(wxT("All jobs finished. Time consumption: %umin "
+		    "(average per device: %umin %usec)"),
+		    (unsigned)((float)totJobTime + 0.5f) /* roundup */,
+		    avgJobTime / 60, avgJobTime % 60);
 		SetStatusText(wxs);
 		tLog(RTL_GREEN, wxs);
+		/*
+		 * The correct size_t format specifier %zu might not
+		 * be available on older mingw xcompiler, so use %lu.
+		 */
+		wxs = wxString::Format(wxT("Total updates: %lu, success: %lu, failed: %lu"),
+		    (unsigned long) getTotalUpdates(), (unsigned long) getSuccessUpdates(),
+		    (unsigned long) (getTotalUpdates() - getSuccessUpdates()));
+		tLog(RTL_DEFAULT, wxs);
 		jobTimings.clear();
+		totalUpdates = 0;
+		successUpdates = 0;
 	}
 }
 
