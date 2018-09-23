@@ -1,7 +1,7 @@
 APPICON ICON "wxglade.ico"
 1 VERSIONINFO
 FILEVERSION     1,0,0,0
-PRODUCTVERSION  1,0,1,0
+PRODUCTVERSION  1,0,2,0
 BEGIN
   BLOCK "StringFileInfo"
   BEGIN
@@ -13,7 +13,7 @@ BEGIN
       VALUE "LegalCopyright", "Toni Uhlig"
       VALUE "OriginalFilename", "UpdateTool.exe"
       VALUE "ProductName", "UpdateTool"
-      VALUE "ProductVersion", "1.0.1"
+      VALUE "ProductVersion", "1.0.2"
     END
   END
   BLOCK "VarFileInfo"
