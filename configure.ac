@@ -6,11 +6,14 @@ AC_CONFIG_FILES([Makefile src/Makefile])
 
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
+dnl Set build alias to `gcc -dumpmachine` if not set by user
 if test x"$cross_compiling" != x"no"; then
 	HOST_PREFIX="${host_alias}-"
 	HOST_SUFFIX="-$host_alias"
 	if test x"${build_alias}" = x; then
-		AC_MSG_ERROR([Cross compile enabled but no --build *explicitly* specified. For example: --build=$(gcc -dumpmachine)])
+		AC_MSG_WARN([Cross compile enabled but no --build *explicitly* specified. Using default --build=$(gcc -dumpmachine)])
+		build="$(gcc -dumpmachine)"
+		build_alias="$(gcc -dumpmachine)"
 	fi
 else
 	HOST_PREFIX=
@@ -91,8 +94,8 @@ fi
 
 AC_ARG_VAR(WINDRES, [Windows resource compiler command])
 
-ut_cflags=""
-ut_libs=""
+ut_cflags="${CFLAGS}"
+ut_libs="${LIBS}"
 PROGRAM_EXT=
 windres=
 case "${host}" in
