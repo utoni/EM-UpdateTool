@@ -121,6 +121,13 @@ if test x"${ut_buildgui}" = x"yes"; then
 	if test x"${ut_use_msw}" = x"yes" -a x"${enable_host_wxwidgets}" = x"yes"; then
 		AC_MSG_ERROR([Building UpdateTool for Windows based platforms is not supported with --enable-host-wxwidgets])
 	fi
+	AC_MSG_CHECKING([for wxWidgets GTK])
+	wx_gtk=$(${utool_wxdir}wx-config --selected-config | grep -o gtk)
+	if test x"${wx_gtk}" = x"gtk"; then
+		AC_MSG_RESULT([yes])
+	else
+		AC_MSG_ERROR([libwxgtk3.0-dev not found])
+	fi
 	AC_MSG_CHECKING([for wxWidgets version])
 	wx_version=$(${utool_wxdir}wx-config --version-full)
 	AC_MSG_RESULT([${wx_version}])
